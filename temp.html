@@ -1,179 +1,1365 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Premium AR Wedding Invite 💍</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
-    <style>
-        #invite-btn { position: fixed; bottom: 20px; left: 20px; width: 55px; height: 55px; border-radius: 50%; border: none; font-size: 22px; background: #ff69b4; color: white; z-index: 999; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; }
-        #invite-box { position: fixed; bottom: 90px; left: 20px; width: 220px; padding: 12px; background: rgba(0,0,0,0.85); color: white; border-radius: 10px; font-size: 14px; display: none; z-index: 999; border: 1px solid #FFD700; }
-    </style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<title>Premium AR Wedding Invitation | Rahul & Saira</title>
+
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+<script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: Georgia, serif;
+    color: #fff;
+}
+
+button, input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+a-scene {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* LOADING SCREEN */
+#loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: rgba(13,0,20,0.97);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 18px;
+    text-align: center;
+    padding: 20px;
+    transition: opacity .4s ease;
+}
+
+#loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255,182,193,.2);
+    border-top: 3px solid #ff69b4;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#loading-text {
+    color: #ffb6c1;
+    font-size: 14px;
+}
+
+/* TRACKING STATUS */
+#status-bar {
+    position: fixed;
+    top: max(12px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+    background: rgba(15,0,25,.88);
+    border: 1px solid rgba(255,215,0,.45);
+    border-radius: 12px;
+    padding: 11px 16px;
+    max-width: 94vw;
+    text-align: center;
+    font-size: 12px;
+    color: #ffd700;
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+}
+
+#status-dot {
+    display: inline-block;
+    height: 9px;
+    width: 9px;
+    background: orange;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+#status-dot.active {
+    background: #00ff88;
+    box-shadow: 0 0 8px #00ff88;
+}
+
+/* MAIN CONTROLS */
+#controls {
+    position: fixed;
+    left: 50%;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    width: min(96%, 500px);
+    z-index: 1100;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.btn {
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,215,0,.55);
+    background: rgba(22,0,30,.94);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    min-height: 44px;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg,#ff69b4,#c0255a);
+    border-color: #ffb6c1;
+}
+
+.btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+/* INVITATION POPUP */
+#invite-box {
+    position: fixed;
+    left: 50%;
+    bottom: 92px;
+    transform: translateX(-50%);
+    width: min(92vw,390px);
+    max-height: 55vh;
+    overflow-y: auto;
+    display: none;
+    z-index: 1200;
+    padding: 24px;
+    background: rgba(23,0,35,.97);
+    border: 1px solid #ffd700;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 12px 35px rgba(0,0,0,.6);
+}
+
+#invite-box h2 {
+    margin-top: 0;
+    color: #ffd700;
+}
+
+#invite-message {
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+/* OCR DIALOG */
+#ocr-panel {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    z-index: 2000;
+    width: min(94vw,420px);
+    max-height: 85vh;
+    overflow-y: auto;
+    background: rgba(20,0,32,.98);
+    border: 1px solid #ffd700;
+    border-radius: 18px;
+    padding: 22px;
+    display: none;
+    text-align: center;
+    box-shadow: 0 12px 45px rgba(0,0,0,.8);
+}
+
+#ocr-panel h3 {
+    color: #ffd700;
+    margin-top: 0;
+}
+
+#ocr-panel p {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+#guest-name-input {
+    width: 100%;
+    padding: 13px;
+    font-size: 16px;
+    color: #222;
+    background: white;
+    border: 1px solid #ffb6c1;
+    border-radius: 9px;
+    margin: 10px 0;
+}
+
+#ocr-result {
+    min-height: 18px;
+    font-size: 12px;
+    color: #ffd700;
+    margin-bottom: 12px;
+}
+
+.ocr-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* NOTIFICATIONS */
+#toast {
+    position: fixed;
+    top: 78px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2500;
+    display: none;
+    max-width: 92vw;
+    width: 350px;
+    padding: 12px;
+    border-radius: 9px;
+    background: rgba(0,0,0,.9);
+    color: white;
+    text-align: center;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+/* RESEARCH METRICS */
+#metrics {
+    position: fixed;
+    top: 110px;
+    left: 12px;
+    z-index: 1050;
+    display: none;
+    padding: 12px;
+    background: rgba(0,0,0,.83);
+    border: 1px solid rgba(255,215,0,.4);
+    border-radius: 10px;
+    font: 11px/1.8 monospace;
+    color: white;
+    max-width: min(85vw,300px);
+}
+
+#metrics.visible {
+    display: block;
+}
+
+@media(max-width:420px) {
+    #controls {
+        width: 98%;
+        gap: 6px;
+    }
+
+    .btn {
+        padding: 9px;
+        font-size: 11px;
+    }
+
+    #invite-box {
+        bottom: 120px;
+    }
+
+    #status-bar {
+        font-size: 11px;
+    }
+}
+</style>
 </head>
 
-<body style="margin: 0; overflow: hidden;">
+<body>
 
-<button id="invite-btn" onclick="showInvite()">💌</button>
-<div id="invite-box">
-    <p>You are warmly invited to celebrate the wedding of <b>Rahul</b> & <b>Saira</b>. Your presence will make this occasion truly special. 💍<br><br>Please do come and bless us ❤️</p>
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+    <div class="loader"></div>
+    <div id="loading-text">Initializing AR Wedding Experience...</div>
 </div>
 
-<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="colorManagement: true; antialias: true;">
-    
-    <a-assets>
+<!-- TRACKING STATUS -->
+<div id="status-bar">
+    <span id="status-dot"></span>
+    <span id="status-text">Initializing camera...</span>
+</div>
+
+<!-- INVITATION -->
+<div id="invite-box" role="dialog" aria-label="Wedding invitation">
+    <h2>💍 Wedding Invitation</h2>
+
+    <div id="invite-message">
+        You are warmly invited to celebrate the wedding of
+        <b>Rahul &amp; Saira</b>.
+        <br><br>
+        Your presence will make this occasion truly special.
+        <br><br>
+        Please come and bless us ❤️
+    </div>
+
+    <br>
+
+    <button class="btn primary" onclick="toggleInvitation()">
+        Close Invitation
+    </button>
+</div>
+
+<!-- OCR PANEL -->
+<div id="ocr-panel" role="dialog" aria-label="Guest name personalization">
+    <h3>💌 Personalized Invitation</h3>
+
+    <p>
+        Hold a printed guest card in front of the camera.
+        For better accuracy, use:
+        <b>Guest: Ananya</b>
+    </p>
+
+    <input
+        id="guest-name-input"
+        type="text"
+        maxlength="40"
+        autocomplete="off"
+        placeholder="Enter or confirm guest name">
+
+    <div id="ocr-result"></div>
+
+    <div class="ocr-buttons">
+        <button class="btn" id="scan-btn" onclick="scanGuestName()">
+            📷 Scan
+        </button>
+
+        <button class="btn primary" onclick="confirmGuestName()">
+            ✓ Confirm
+        </button>
+
+        <button class="btn" onclick="closeOCRPanel()">
+            Cancel
+        </button>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- RESEARCH METRICS -->
+<div id="metrics">
+    <div>Marker detections: <span id="metric-detections">0</span></div>
+    <div>Tracking losses: <span id="metric-losses">0</span></div>
+    <div>Marker visible: <span id="metric-visible">0.0</span>s</div>
+    <div>First detection: <span id="metric-first">--</span></div>
+    <div>Animation FPS: <span id="metric-fps">--</span></div>
+    <div>OCR attempts: <span id="metric-ocr">0</span></div>
+    <div>Last OCR time: <span id="metric-ocr-time">--</span></div>
+    <div>Confirmed names: <span id="metric-confirmed">0</span></div>
+</div>
+
+<!-- CONTROLS -->
+<div id="controls">
+    <button class="btn primary" onclick="toggleInvitation()">
+        💌 Invitation
+    </button>
+
+    <button class="btn" onclick="openOCRPanel()">
+        📷 Guest Name
+    </button>
+
+    <button class="btn" id="music-btn" onclick="toggleMusic()">
+        🔇 Music
+    </button>
+
+    <button class="btn" id="voice-btn" onclick="toggleVoice()">
+        🔊 Voice
+    </button>
+
+    <button class="btn" onclick="toggleMetrics()">
+        📊 Metrics
+    </button>
+</div>
+
+<!-- MUSIC -->
+<audio
+    id="wedding-audio"
+    src="wedding-music.mp3"
+    loop
+    preload="none">
+</audio>
+
+<!-- AUGMENTED REALITY SCENE -->
+<a-scene
+    id="ar-scene"
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono;"
+    renderer="colorManagement: true; antialias: true; alpha: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <!-- ASSETS -->
+    <a-assets timeout="20000">
+
         <img id="bg" src="Background.png" crossorigin="anonymous">
         <img id="board" src="board.png" crossorigin="anonymous">
-        
-        <img id="p1" src="https://images.unsplash.com/photo-1519741497674-611481863552?w=500" crossorigin="anonymous">
-        <img id="p2" src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=500" crossorigin="anonymous">
-        <img id="p3" src="https://images.unsplash.com/photo-1465495910483-0d6745778503?w=500" crossorigin="anonymous">
-        <img id="p4" src="https://images.unsplash.com/photo-1519225495810-7514194cba81?w=500" crossorigin="anonymous">
-        <img id="p5" src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=500" crossorigin="anonymous">
-        
-        <img id="marble" src="stage.png" crossorigin="anonymous">
-        
-        <a-mixin id="frame" geometry="primitive: plane; width: 0.54; height: 0.54" material="color: #FFF; shader: standard; emissive: #FFD700; emissiveIntensity: 0.1"></a-mixin>
+        <img id="floor-img" src="texture.jpg" crossorigin="anonymous">
+        <img id="wood-img" src="wood.jpg" crossorigin="anonymous">
+        <img id="petal-img" src="rose_petal.png" crossorigin="anonymous">
+
+        <a-asset-item
+            id="gate-model"
+            src="wedding_gate-v1.glb">
+        </a-asset-item>
+
+        <a-asset-item
+            id="couple-model"
+            src="couple.glb">
+        </a-asset-item>
+
     </a-assets>
 
-    <a-entity id="music"></a-entity>
-    <a-light type="ambient" intensity="1.2"></a-light>
-    <a-light type="directional" position="1 4 1" intensity="1"></a-light>
+    <!-- LIGHTING -->
+    <a-light type="ambient" intensity="1.1"></a-light>
 
-    <a-marker preset="hiro">
+    <a-light
+        type="directional"
+        position="1 4 2"
+        intensity="0.85">
+    </a-light>
 
-     
-<!-- 🌸 BACKGROUND (OPAQUE - NO TRANSPARENCY) -->
-<a-entity 
-    geometry="primitive: cylinder; radius: 2; height: 3; thetaStart: 120; thetaLength: 120; openEnded: true"
-    material="src: #bg; side: back; shader: flat; transparent: true; opacity: 1"
-    position="0 0 -0.75" 
-    rotation="0 0 0">
-</a-entity>
+    <!-- HIRO MARKER -->
+    <a-marker
+        id="hiro-marker"
+        preset="hiro"
+        emitevents="true"
+        smooth="true"
+        smoothCount="5"
+        smoothTolerance="0.01"
+        smoothThreshold="2">
 
-<a-circle 
-<a-circle 
-    src="texture.jpg" 
-    rotation="-90 0 0" 
-    radius="1" 
-    position="0 0.01 0"
-    material="roughness: 0.8; metalness: 0.1"
-    crossorigin="anonymous">
-
-    <a-ring 
-        src="wood.jpg"
-        radius-inner="0.95" 
-        radius-outer="1.05" 
-        position="0 0 0.01"
-        material="shader: standard; roughness: 0.6; metalness: 0.2">
-    </a-ring>
-</a-circle>
-
-
-<a-circle 
-    color="#000"
-    opacity="0.2"
-    radius="1.1"
-    rotation="-90 0 0"
-    position="0 0.005 0">
-</a-circle>
-        <a-entity gltf-model="wedding_gate-v1.glb" position="0 0 -0.8" scale="1.5 1.5 1.5"></a-entity>
-        <a-entity gltf-model="couple.glb" position="0 1 0.2" scale="0.75 0.75 0.75" animation="property: rotation; to: 0 360 0; dur: 15000; easing: linear; loop: true"></a-entity>
-
-        <a-entity position="0 2.5 -0.5" look-at="[camera]">
-            <a-text value="RAHUL WEDS SAIRA" align="center" color="#FFD700" width="5" animation="property: scale; to: 1.1 1.1 1.1; dir: alternate; dur: 1200; loop: true"></a-text>
-            <a-text value="RAHUL WEDS SAIRA" align="center" color="#000" width="5" opacity="0.4" position="0.03 -0.03 -0.01"></a-text>
+        <!-- BACKGROUND CYLINDER -->
+        <a-entity
+            geometry="primitive: cylinder;
+                      radius: 2;
+                      height: 3;
+                      thetaStart: 120;
+                      thetaLength: 120;
+                      openEnded: true"
+            material="src: #bg;
+                      side: back;
+                      shader: flat;
+                      transparent: false"
+            position="0 0 -0.75">
         </a-entity>
 
-        <!-- 💌 WELCOME BOARD -->
-<a-plane 
-    src="#board"
-    width="0.7"
-    height="1.2"
-    position="0.8 0.6 0.4"
-    rotation="0 -20 0"
-    material="transparent: true; alphaTest: 0.5; shader: flat"
-    look-at="[camera]">
-</a-plane>
-      
+        <!-- FLOOR -->
+        <a-circle
+            radius="1"
+            position="0 0.01 0"
+            rotation="-90 0 0"
+            material="src: #floor-img;
+                      side: double;
+                      roughness: 0.8;
+                      metalness: 0.1">
+        </a-circle>
 
+        <!-- FLOOR BORDER -->
+        <a-ring
+            radius-inner="0.95"
+            radius-outer="1.05"
+            position="0 0.025 0"
+            rotation="-90 0 0"
+            material="src: #wood-img;
+                      side: double;
+                      roughness: 0.6;
+                      metalness: 0.2">
+        </a-ring>
+
+        <!-- GATE MODEL -->
+        <a-entity
+            id="wedding-gate"
+            gltf-model="#gate-model"
+            position="0 0 -0.8"
+            scale="1.5 1.5 1.5">
+        </a-entity>
+
+        <!-- COUPLE MODEL -->
+        <a-entity
+            id="wedding-couple"
+            gltf-model="#couple-model"
+            position="0 1 0.2"
+            scale="0.75 0.75 0.75"
+            animation="property: rotation;
+                       from: 0 0 0;
+                       to: 0 360 0;
+                       dur: 20000;
+                       easing: linear;
+                       loop: true">
+        </a-entity>
+
+        <!-- TITLE -->
+        <a-entity
+            position="0 2.5 -0.5"
+            look-at="[camera]">
+
+            <a-text
+                value="RAHUL WEDS SAIRA"
+                align="center"
+                color="#FFD700"
+                width="5"
+                animation="property: scale;
+                           from: 1 1 1;
+                           to: 1.08 1.08 1.08;
+                           dir: alternate;
+                           dur: 1400;
+                           loop: true">
+            </a-text>
+        </a-entity>
+
+        <!-- WELCOME BOARD -->
+        <a-plane
+            src="#board"
+            width="0.7"
+            height="1.2"
+            position="0.8 0.6 0.4"
+            material="transparent: true;
+                      alphaTest: 0.5;
+                      shader: flat;
+                      side: double"
+            look-at="[camera]">
+        </a-plane>
+
+        <!-- ROSE PETALS -->
         <a-entity id="petal-container">
-            <a-plane src="rose_petal.png" position="-0.8 3 0" width="0.2" height="0.2" material="transparent:true;side:double" look-at="[camera]" animation="property: position; to: -0.8 0 0; dur: 4000; loop: true; easing: linear"></a-plane>
-            <a-plane src="rose_petal.png" position="0.8 3.5 0.5" width="0.2" height="0.2" material="transparent:true;side:double" look-at="[camera]" animation="property: position; to: 0.8 0 0.5; dur: 5000; loop: true; easing: linear"></a-plane>
-            <a-plane src="rose_petal.png" position="-0.3 4 -0.5" width="0.2" height="0.2" material="transparent:true;side:double" look-at="[camera]" animation="property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear"></a-plane>
-             <a-plane src="rose_petal.png" position="-0.6 2.3 0.1" width="0.2" height="0.2" material="transparent:true;side:double" look-at="[camera]" animation="property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear"></a-plane>
-             <a-plane src="rose_petal.png" position="-0.8 2.1 -0.7" width="0.2" height="0.2" material="transparent:true;side:double" look-at="[camera]" animation="property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear"></a-plane>
-             <a-plane src="rose_petal.png" position="-0.1 3.2 -0.9" width="0.2" height="0.2" material="transparent:true;side:double" look-at="[camera]" animation="property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear"></a-plane>
-             <a-plane src="rose_petal.png" position="-0.1 2.8 -1" width="0.2" height="0.2" material="transparent:true;side:double" look-at="[camera]" animation="property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear"></a-plane>
+
+            <a-plane
+                src="#petal-img"
+                position="-0.8 3 0"
+                width="0.2"
+                height="0.2"
+                material="transparent: true; side: double"
+                look-at="[camera]"
+                animation="property: position;
+                           from: -0.8 3 0;
+                           to: -0.8 0 0;
+                           dur: 4000;
+                           loop: true">
+            </a-plane>
+
+            <a-plane
+                src="#petal-img"
+                position="0.8 3.5 0.5"
+                width="0.2"
+                height="0.2"
+                material="transparent: true; side: double"
+                look-at="[camera]"
+                animation="property: position;
+                           from: 0.8 3.5 0.5;
+                           to: 0.8 0 0.5;
+                           dur: 5000;
+                           loop: true">
+            </a-plane>
+
+            <a-plane
+                src="#petal-img"
+                position="-0.3 4 -0.5"
+                width="0.2"
+                height="0.2"
+                material="transparent: true; side: double"
+                look-at="[camera]"
+                animation="property: position;
+                           from: -0.3 4 -0.5;
+                           to: -0.3 0 -0.5;
+                           dur: 4500;
+                           loop: true">
+            </a-plane>
+
+            <a-plane
+                src="#petal-img"
+                position="-0.6 2.3 0.1"
+                width="0.2"
+                height="0.2"
+                material="transparent: true; side: double"
+                look-at="[camera]"
+                animation="property: position;
+                           from: -0.6 2.3 0.1;
+                           to: -0.6 0 0.1;
+                           dur: 4700;
+                           loop: true">
+            </a-plane>
+
+            <a-plane
+                src="#petal-img"
+                position="-0.8 2.1 -0.7"
+                width="0.2"
+                height="0.2"
+                material="transparent: true; side: double"
+                look-at="[camera]"
+                animation="property: position;
+                           from: -0.8 2.1 -0.7;
+                           to: -0.8 0 -0.7;
+                           dur: 4300;
+                           loop: true">
+            </a-plane>
+
+            <a-plane
+                src="#petal-img"
+                position="-0.1 3.2 -0.9"
+                width="0.2"
+                height="0.2"
+                material="transparent: true; side: double"
+                look-at="[camera]"
+                animation="property: position;
+                           from: -0.1 3.2 -0.9;
+                           to: -0.1 0 -0.9;
+                           dur: 5200;
+                           loop: true">
+            </a-plane>
+
+            <a-plane
+                src="#petal-img"
+                position="0.4 2.8 -1"
+                width="0.2"
+                height="0.2"
+                material="transparent: true; side: double"
+                look-at="[camera]"
+                animation="property: position;
+                           from: 0.4 2.8 -1;
+                           to: 0.4 0 -1;
+                           dur: 4800;
+                           loop: true">
+            </a-plane>
+
         </a-entity>
 
-        <a-text id="detected-name" value="" position="0 -0.8 1" align="center" color="#FF69B4" width="6" font="roboto" look-at="[camera]"></a-text>
-        <a-text id="personal-msg" value="Scanning name..." position="0 -1.3 1" align="center" color="#FFF5CC" width="4" font="roboto" look-at="[camera]"></a-text>
+        <!-- PERSONALIZED AR TEXT -->
+        <a-text
+            id="detected-name"
+            value=""
+            position="0 0.25 1"
+            align="center"
+            color="#ff69b4"
+            width="4"
+            look-at="[camera]">
+        </a-text>
+
+        <a-text
+            id="personal-msg"
+            value="Welcome to our wedding!"
+            position="0 -0.15 1"
+            align="center"
+            color="#fff5cc"
+            width="3"
+            look-at="[camera]">
+        </a-text>
 
     </a-marker>
+
+    <!-- CAMERA -->
     <a-entity camera></a-entity>
+
 </a-scene>
 
 <script>
-    // Logic remains identical
-    let lastName = "";
-    let processing = false;
+"use strict";
 
-    function speak(text) {
-        const msg = new SpeechSynthesisUtterance(text);
-        speechSynthesis.speak(msg);
+/* CONFIGURATION */
+const CONFIG = {
+    OCR_CONFIDENCE: 65,
+    OCR_MAX_WIDTH: 960,
+    OCR_CROP_RATIO: 0.75,
+    TOAST_MS: 3500
+};
+
+/* STATE */
+const state = {
+    markerVisible: false,
+    cameraReady: false,
+    processing: false,
+    guestName: "",
+    voiceEnabled: true,
+    musicEnabled: false,
+    ocrWorker: null,
+    ocrWorkerPromise: null,
+    ocrAttempts: 0,
+    confirmedNames: 0,
+    lastOCRMs: null,
+    detections: 0,
+    losses: 0,
+    visibleSince: null,
+    totalVisibleMs: 0,
+    startupTime: performance.now(),
+    firstDetectionMs: null,
+    fps: 0
+};
+
+/* HELPERS */
+function el(id) {
+    return document.getElementById(id);
+}
+
+let toastTimer;
+
+function toast(message, duration = CONFIG.TOAST_MS) {
+    const box = el("toast");
+
+    box.textContent = message;
+    box.style.display = "block";
+
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+        box.style.display = "none";
+    }, duration);
+}
+
+function setStatus(message, active = false) {
+    el("status-text").textContent = message;
+    el("status-dot").classList.toggle("active", active);
+}
+
+function hideLoader() {
+    el("loading-screen").classList.add("hidden");
+}
+
+/* INITIALIZATION */
+function initialize() {
+    if (!window.isSecureContext) {
+        hideLoader();
+        setStatus("HTTPS required for camera");
+        toast("Open the website using HTTPS or localhost.", 7000);
+        return;
     }
 
-    window.addEventListener("click", () => {
-        const music = document.querySelector("#music");
-        if (!music.components.sound) {
-            music.setAttribute("sound", { src: "url(wedding-music.mp3)", autoplay: true, loop: true, volume: 0.7 });
-        } else { music.components.sound.playSound(); }
+    const scene = el("ar-scene");
+    const marker = el("hiro-marker");
+
+    marker.addEventListener("markerFound", markerFound);
+    marker.addEventListener("markerLost", markerLost);
+
+    scene.addEventListener("loaded", hideLoader);
+    scene.addEventListener("renderstart", hideLoader);
+
+    window.addEventListener("arjs-video-loaded", () => {
+        state.cameraReady = true;
+        hideLoader();
+        setStatus("Camera ready — scan Hiro marker");
     });
 
-    function showInvite() {
-        const box = document.getElementById("invite-box");
-        box.style.display = (box.style.display === "block") ? "none" : "block";
+    window.addEventListener("camera-init", () => {
+        state.cameraReady = true;
+        hideLoader();
+        setStatus("Camera ready — scan Hiro marker");
+    });
+
+    window.addEventListener("camera-error", event => {
+        hideLoader();
+
+        const message =
+            event.detail?.error?.message ||
+            event.detail?.message ||
+            "Camera unavailable";
+
+        setStatus("Camera error");
+        toast("Camera error: " + message, 7000);
+    });
+
+    scene.addEventListener("asset-error", event => {
+        console.error("Asset error:", event.detail);
+        toast("Some AR assets failed to load.");
+    });
+
+    setupModelEvents();
+    setupMusic();
+    startMetrics();
+
+    setTimeout(() => {
+        hideLoader();
+
+        if (!state.cameraReady) {
+            setStatus("Check camera permission and HTTPS");
+        }
+    }, 12000);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialize);
+} else {
+    initialize();
+}
+
+/* MODEL EVENTS */
+function setupModelEvents() {
+    ["wedding-gate", "wedding-couple"].forEach(id => {
+        const model = el(id);
+
+        model.addEventListener("model-loaded", () => {
+            console.log(id + " loaded");
+        });
+
+        model.addEventListener("model-error", event => {
+            console.error(id, event.detail);
+            toast("Model loading error: " + id);
+        });
+    });
+}
+
+/* MARKER TRACKING */
+function markerFound() {
+    if (state.markerVisible) return;
+
+    state.markerVisible = true;
+    state.detections++;
+
+    const now = performance.now();
+    state.visibleSince = now;
+
+    if (state.firstDetectionMs === null) {
+        state.firstDetectionMs = now - state.startupTime;
     }
 
-    function extractName(text) {
-        text = text.replace(/[^a-zA-Z ]/g, " ");
-        let words = text.split(/\s+/);
-        const ignore = ["hiro","marker","camera","welcome","wedding","invitation","rahul","saira","weds","gate"];
-        return words.filter(w => w.length >= 3 && w.length <= 12 && /^[A-Za-z]+$/.test(w) && !ignore.includes(w.toLowerCase()))[0] || "";
+    setStatus("Hiro marker detected — AR active", true);
+    updateMetrics();
+}
+
+function markerLost() {
+    if (!state.markerVisible) return;
+
+    const now = performance.now();
+
+    if (state.visibleSince !== null) {
+        state.totalVisibleMs += now - state.visibleSince;
     }
 
-    async function scan() {
-        if (processing) return;
-        processing = true;
-        const video = document.querySelector("video");
-        if (!video || video.readyState !== 4) { processing = false; setTimeout(scan, 1000); return; }
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        let d = imgData.data;
-        for (let i=0; i<d.length; i+=4) { let g = (d[i]+d[i+1]+d[i+2])/3; d[i]=d[i+1]=d[i+2]=g; }
-        ctx.putImageData(imgData, 0, 0);
+    state.visibleSince = null;
+    state.markerVisible = false;
+    state.losses++;
 
-        try {
-            const result = await Tesseract.recognize(canvas, 'eng');
-            let name = extractName(result.data.text);
-            if (name && name !== lastName) {
-                lastName = name;
-                let msg = `Dear ${name}, you are warmly invited to the wedding of Rahul and Saira.`;
-                let displayMsg = `Dear ${name},\nYou are warmly invited to celebrate the wedding of\nRahul & Saira 💍\nPlease do come and bless us ❤️`;
-                document.querySelector("#personal-msg").setAttribute("value", displayMsg);
-                document.querySelector("#detected-name").setAttribute("value", name.toUpperCase());
-                speak(msg);
-            }
-        } catch (err) { console.log(err); }
-        processing = false;
-        setTimeout(scan, 2500);
+    setStatus("Marker lost — scan Hiro marker");
+    updateMetrics();
+}
+
+/* INVITATION */
+function toggleInvitation() {
+    const box = el("invite-box");
+
+    box.style.display =
+        box.style.display === "block" ? "none" : "block";
+}
+
+/* SPEECH */
+function speak(message) {
+    if (!state.voiceEnabled) return;
+
+    if (
+        !("speechSynthesis" in window) ||
+        !("SpeechSynthesisUtterance" in window)
+    ) {
+        toast("Voice is not supported on this browser.");
+        return;
     }
-    setTimeout(scan, 3000);
+
+    try {
+        speechSynthesis.cancel();
+
+        const speech = new SpeechSynthesisUtterance(message);
+
+        speech.lang = "en-IN";
+        speech.rate = 0.95;
+        speech.pitch = 1.05;
+        speech.volume = 1;
+
+        speechSynthesis.speak(speech);
+    } catch (error) {
+        console.warn("Speech error:", error);
+    }
+}
+
+function toggleVoice() {
+    state.voiceEnabled = !state.voiceEnabled;
+
+    if (!state.voiceEnabled && "speechSynthesis" in window) {
+        speechSynthesis.cancel();
+    }
+
+    el("voice-btn").textContent =
+        state.voiceEnabled ? "🔊 Voice" : "🔇 Voice";
+}
+
+/* MUSIC */
+function setupMusic() {
+    const music = el("wedding-audio");
+
+    music.volume = 0.6;
+
+    music.addEventListener("play", () => {
+        state.musicEnabled = true;
+        el("music-btn").textContent = "🎵 Music";
+    });
+
+    music.addEventListener("pause", () => {
+        state.musicEnabled = false;
+        el("music-btn").textContent = "🔇 Music";
+    });
+
+    music.addEventListener("error", () => {
+        state.musicEnabled = false;
+        el("music-btn").textContent = "🔇 Music";
+        toast("Check wedding-music.mp3 — audio unavailable.");
+    });
+}
+
+async function toggleMusic() {
+    const music = el("wedding-audio");
+
+    if (!music.paused) {
+        music.pause();
+        return;
+    }
+
+    try {
+        await music.play();
+    } catch (error) {
+        console.error(error);
+        toast("Unable to play wedding music.");
+    }
+}
+
+/* OCR PANEL */
+function openOCRPanel() {
+    el("ocr-panel").style.display = "block";
+    el("ocr-result").textContent = "";
+}
+
+function closeOCRPanel() {
+    if (state.processing) {
+        toast("Please finish the current scan.");
+        return;
+    }
+
+    el("ocr-panel").style.display = "none";
+}
+
+/* VIDEO */
+function getVideo() {
+    const videos = Array.from(
+        document.querySelectorAll("video")
+    );
+
+    return videos.find(video =>
+        video.readyState >= 2 &&
+        video.videoWidth > 0 &&
+        video.videoHeight > 0
+    ) || null;
+}
+
+/* OCR WORKER */
+async function getOCRWorker() {
+    if (state.ocrWorker) return state.ocrWorker;
+
+    if (state.ocrWorkerPromise) {
+        return state.ocrWorkerPromise;
+    }
+
+    if (!window.Tesseract) {
+        throw new Error("Tesseract library not loaded");
+    }
+
+    state.ocrWorkerPromise = (async () => {
+        const worker = Tesseract.createWorker();
+
+        await worker.load();
+        await worker.loadLanguage("eng");
+        await worker.initialize("eng");
+
+        await worker.setParameters({
+            tessedit_pageseg_mode: "6"
+        });
+
+        state.ocrWorker = worker;
+        return worker;
+    })();
+
+    try {
+        return await state.ocrWorkerPromise;
+    } catch (error) {
+        state.ocrWorkerPromise = null;
+        throw error;
+    }
+}
+
+/* FRAME PREPROCESSING */
+function captureFrame(video) {
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+
+    if (!width || !height) {
+        throw new Error("Camera frame unavailable");
+    }
+
+    const cropWidth = Math.floor(
+        width * CONFIG.OCR_CROP_RATIO
+    );
+
+    const cropHeight = Math.floor(
+        height * CONFIG.OCR_CROP_RATIO
+    );
+
+    const sx = Math.floor((width - cropWidth) / 2);
+    const sy = Math.floor((height - cropHeight) / 2);
+
+    const scale = Math.min(
+        1,
+        CONFIG.OCR_MAX_WIDTH / cropWidth
+    );
+
+    const canvas = document.createElement("canvas");
+
+    canvas.width = Math.max(1, Math.round(cropWidth * scale));
+    canvas.height = Math.max(1, Math.round(cropHeight * scale));
+
+    const ctx = canvas.getContext("2d", {
+        willReadFrequently: true
+    });
+
+    if (!ctx) {
+        throw new Error("Canvas context unavailable");
+    }
+
+    ctx.drawImage(
+        video,
+        sx, sy, cropWidth, cropHeight,
+        0, 0, canvas.width, canvas.height
+    );
+
+    const image = ctx.getImageData(
+        0, 0, canvas.width, canvas.height
+    );
+
+    const data = image.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        const gray =
+            0.299 * data[i] +
+            0.587 * data[i + 1] +
+            0.114 * data[i + 2];
+
+        const enhanced = Math.max(
+            0,
+            Math.min(255, (gray - 128) * 1.25 + 128)
+        );
+
+        data[i] = enhanced;
+        data[i + 1] = enhanced;
+        data[i + 2] = enhanced;
+    }
+
+    ctx.putImageData(image, 0, 0);
+
+    return canvas;
+}
+
+/* NAME SANITIZATION */
+function sanitizeName(input) {
+    return String(input || "")
+        .replace(/[^A-Za-z\s'-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 40);
+}
+
+/* EXTRACT NAME */
+function extractGuestName(text) {
+    const lines = String(text || "")
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+
+    const pattern =
+        /^(?:guest(?:\s+name)?|name|dear)\s*[:\-]?\s*([A-Za-z][A-Za-z '-]{1,39})$/i;
+
+    for (const line of lines) {
+        const match = line.match(pattern);
+
+        if (!match) continue;
+
+        let name = sanitizeName(match[1]);
+
+        name = name.replace(
+            /\b(?:welcome|wedding|invitation|rahul|saira)\b.*$/i,
+            ""
+        ).trim();
+
+        if (name.length >= 2) {
+            return name;
+        }
+    }
+
+    return "";
+}
+
+/* OCR SCAN */
+async function scanGuestName() {
+    if (state.processing) return;
+
+    const video = getVideo();
+
+    if (!video) {
+        toast("Camera not ready. Allow camera access.");
+        return;
+    }
+
+    state.processing = true;
+    state.ocrAttempts++;
+
+    const button = el("scan-btn");
+
+    button.disabled = true;
+    button.textContent = "Scanning...";
+
+    el("ocr-result").textContent =
+        "Recognizing guest name...";
+
+    const start = performance.now();
+
+    try {
+        const canvas = captureFrame(video);
+        const worker = await getOCRWorker();
+        const result = await worker.recognize(canvas);
+
+        const text = result.data?.text || "";
+        const confidence = Number(
+            result.data?.confidence || 0
+        );
+
+        const name = extractGuestName(text);
+
+        state.lastOCRMs = performance.now() - start;
+
+        console.log("OCR:", {
+            text,
+            confidence,
+            name,
+            timeMs: state.lastOCRMs
+        });
+
+        if (
+            name &&
+            confidence >= CONFIG.OCR_CONFIDENCE
+        ) {
+            el("guest-name-input").value = name;
+
+            el("ocr-result").textContent =
+                "Detected: " + name +
+                " | OCR confidence: " +
+                confidence.toFixed(1) + "%";
+
+            toast("Verify the detected name before confirming.");
+        } else {
+            el("ocr-result").textContent =
+                "Name not recognized confidently. " +
+                "Enter the name manually.";
+
+            toast("Try a card labelled Guest: Your Name.");
+        }
+    } catch (error) {
+        console.error("OCR error:", error);
+
+        el("ocr-result").textContent =
+            "OCR failed. Enter the name manually.";
+
+        toast("OCR error: " + error.message);
+    } finally {
+        state.processing = false;
+        button.disabled = false;
+        button.textContent = "📷 Scan";
+
+        updateMetrics();
+    }
+}
+
+/* CONFIRM GUEST */
+function confirmGuestName() {
+    const name = sanitizeName(
+        el("guest-name-input").value
+    );
+
+    if (name.length < 2) {
+        toast("Please enter a valid guest name.");
+        return;
+    }
+
+    state.guestName = name;
+    state.confirmedNames++;
+
+    el("detected-name").setAttribute(
+        "value",
+        name.toUpperCase()
+    );
+
+    el("personal-msg").setAttribute(
+        "value",
+        "Dear " + name +
+        ", welcome to Rahul and Saira's wedding!"
+    );
+
+    const invitation = el("invite-message");
+
+    invitation.replaceChildren();
+
+    const greeting = document.createElement("p");
+    greeting.textContent = "Dear " + name + ",";
+
+    const body = document.createElement("p");
+    body.textContent =
+        "You are warmly invited to celebrate the wedding " +
+        "of Rahul & Saira. Your presence will make " +
+        "this occasion truly special.";
+
+    const closing = document.createElement("p");
+    closing.textContent = "Please come and bless us ❤️";
+
+    invitation.append(greeting, body, closing);
+
+    el("ocr-panel").style.display = "none";
+    el("invite-box").style.display = "block";
+
+    speak(
+        "Dear " + name +
+        ", you are warmly invited to the wedding " +
+        "of Rahul and Saira."
+    );
+
+    toast("Invitation personalized for " + name);
+
+    updateMetrics();
+}
+
+/* METRICS */
+function markerVisibleMilliseconds() {
+    let total = state.totalVisibleMs;
+
+    if (
+        state.markerVisible &&
+        state.visibleSince !== null
+    ) {
+        total += performance.now() - state.visibleSince;
+    }
+
+    return total;
+}
+
+function updateMetrics() {
+    el("metric-detections").textContent = state.detections;
+    el("metric-losses").textContent = state.losses;
+
+    el("metric-visible").textContent =
+        (markerVisibleMilliseconds() / 1000).toFixed(1);
+
+    el("metric-first").textContent =
+        state.firstDetectionMs === null
+            ? "--"
+            : (state.firstDetectionMs / 1000).toFixed(2) + "s";
+
+    el("metric-fps").textContent =
+        state.fps > 0 ? state.fps.toFixed(1) : "--";
+
+    el("metric-ocr").textContent = state.ocrAttempts;
+
+    el("metric-ocr-time").textContent =
+        state.lastOCRMs === null
+            ? "--"
+            : Math.round(state.lastOCRMs) + " ms";
+
+    el("metric-confirmed").textContent =
+        state.confirmedNames;
+}
+
+function toggleMetrics() {
+    el("metrics").classList.toggle("visible");
+    updateMetrics();
+}
+
+/* BROWSER ANIMATION FRAME RATE */
+function startMetrics() {
+    let last = performance.now();
+    let frames = 0;
+    let running = false;
+
+    function frame(now) {
+        if (document.hidden) {
+            running = false;
+            return;
+        }
+
+        frames++;
+
+        if (now - last >= 1000) {
+            state.fps = frames * 1000 / (now - last);
+            frames = 0;
+            last = now;
+            updateMetrics();
+        }
+
+        requestAnimationFrame(frame);
+    }
+
+    function resume() {
+        if (!document.hidden && !running) {
+            running = true;
+            last = performance.now();
+            frames = 0;
+            requestAnimationFrame(frame);
+        }
+    }
+
+    document.addEventListener("visibilitychange", resume);
+    resume();
+}
+
+/* CLEANUP */
+window.addEventListener("pagehide", () => {
+    const music = el("wedding-audio");
+
+    music.pause();
+
+    if ("speechSynthesis" in window) {
+        speechSynthesis.cancel();
+    }
+
+    if (
+        state.ocrWorker &&
+        typeof state.ocrWorker.terminate === "function"
+    ) {
+        state.ocrWorker.terminate();
+        state.ocrWorker = null;
+    }
+});
 </script>
+
 </body>
 </html>
