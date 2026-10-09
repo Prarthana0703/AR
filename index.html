@@ -296,13 +296,6 @@
             border: 1px solid rgba(255,215,0,0.4);
         }
 
-        /* AR EVENT SCHEDULE BUTTON */
-        .btn-ar-schedule {
-            background: rgba(165,100,255,0.13);
-            color: #C9A0FF;
-            border: 1px solid rgba(165,100,255,0.45);
-        }
-
         /* FULLSCREEN AR OVERLAY */
         #ar-fullscreen {
             display: none;
@@ -425,7 +418,7 @@
             </div>
         </div>
 
-        <!-- ALL FOUR BUTTONS -->
+        <!-- HOME PAGE BUTTONS -->
         <div class="btn-group">
 
             <!-- BUTTON 1: AR INVITATION -->
@@ -455,16 +448,6 @@
 
                 <span style="font-size:20px">📅</span>
                 <span>AR Schedule</span>
-
-            </button>
-
-            <!-- BUTTON 4: AR EVENT SCHEDULE -->
-            <button
-                class="btn btn-ar-schedule"
-                onclick="openARSchedule()">
-
-                <span style="font-size:20px">✨</span>
-                <span>AR Event Schedule</span>
 
             </button>
 
@@ -627,13 +610,6 @@
         function openSchedule() {
 
             window.location.href = 'schedule.html';
-
-        }
-
-        /* BUTTON 4: AR EVENT SCHEDULE */
-        function openARSchedule() {
-
-            openAR('schedule.html');
 
         }
 
