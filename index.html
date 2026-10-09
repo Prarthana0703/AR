@@ -79,6 +79,7 @@
                 transform: translateY(-40px) rotate(0deg);
                 opacity: 0.7;
             }
+
             100% {
                 transform: translateY(110vh) rotate(720deg);
                 opacity: 0;
@@ -123,6 +124,7 @@
                 opacity: 0;
                 transform: translateY(32px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -172,8 +174,13 @@
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.09); }
+            0%, 100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.09);
+            }
         }
 
         /* COUNTDOWN */
@@ -270,7 +277,7 @@
 
         /* AR INVITATION BUTTON */
         .btn-invite {
-            background: linear-gradient(135deg,#FF3B7F,#c0255a);
+            background: linear-gradient(135deg, #FF3B7F, #c0255a);
             color: #fff;
             box-shadow: 0 4px 20px rgba(255,59,127,0.35);
         }
@@ -282,7 +289,7 @@
             border: 1px solid rgba(0,200,255,0.4);
         }
 
-        /* NEW AR SCHEDULE BUTTON */
+        /* AR SCHEDULE BUTTON */
         .btn-schedule {
             background: rgba(255,215,0,0.12);
             color: #FFD700;
@@ -353,7 +360,7 @@
         </div>
     </div>
 
-    <!-- PETALS -->
+    <!-- FLOATING PETALS -->
     <div class="petals-bg" id="petals"></div>
 
     <!-- HOME PAGE -->
@@ -421,7 +428,7 @@
         <!-- ALL FOUR BUTTONS -->
         <div class="btn-group">
 
-            <!-- OPEN AR INVITATION -->
+            <!-- BUTTON 1: AR INVITATION -->
             <button
                 class="btn btn-invite"
                 onclick="openARInvitation()">
@@ -431,7 +438,7 @@
 
             </button>
 
-            <!-- AR NAVIGATION -->
+            <!-- BUTTON 2: AR NAVIGATION -->
             <button
                 class="btn btn-nav"
                 onclick="openARNavigation()">
@@ -441,7 +448,7 @@
 
             </button>
 
-            <!-- NEW SCHEDULE BUTTON -->
+            <!-- BUTTON 3: AR SCHEDULE -->
             <button
                 class="btn btn-schedule"
                 onclick="openSchedule()">
@@ -451,7 +458,7 @@
 
             </button>
 
-            <!-- EXISTING AR EVENT SCHEDULE -->
+            <!-- BUTTON 4: AR EVENT SCHEDULE -->
             <button
                 class="btn btn-ar-schedule"
                 onclick="openARSchedule()">
@@ -467,7 +474,7 @@
     <!-- FULLSCREEN AR CONTAINER -->
     <div id="ar-fullscreen"></div>
 
-    <!-- CLOSE AR -->
+    <!-- CLOSE AR BUTTON -->
     <button
         id="ar-close-btn"
         aria-label="Close AR"
@@ -609,18 +616,14 @@
 
         }
 
-        /* BUTTON 2: NAVIGATION */
+        /* BUTTON 2: AR NAVIGATION */
         function openARNavigation() {
 
-            window.open(
-                'https://www.google.com/maps/dir/?api=1&destination=12.9692,79.1559&travelmode=walking',
-                '_blank',
-                'noopener,noreferrer'
-            );
+            window.location.href = 'Navigation.html';
 
         }
 
-        /* BUTTON 3: NEW AR SCHEDULE */
+        /* BUTTON 3: AR SCHEDULE */
         function openSchedule() {
 
             window.location.href = 'schedule.html';
