@@ -3,30 +3,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
 <title>AR Navigation</title>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh_SqXafoV8q-EEXifAaCGqWOeRi50jNA"></script>
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
 
 <style>
 :root {
-    --hud-bg: rgba(0,10,20,0.82);
     --accent: #00ffe7;
-    --accent2: #ff6a00;
-    --warn: #ffe600;
-    --panel-border: 1px solid rgba(0,255,231,0.22);
-    --font-main: 'Rajdhani', sans-serif;
-    --font-mono: 'Share Tech Mono', monospace;
+    --orange: #ff6a00;
+    --panel: rgba(0, 10, 20, 0.83);
+    --border: 1px solid rgba(0,255,231,0.35);
 }
 
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 html, body {
@@ -34,25 +31,30 @@ html, body {
     height: 100%;
     overflow: hidden;
     background: #000;
-    font-family: var(--font-main);
+    color: white;
+    font-family: Arial, sans-serif;
 }
 
-/* CAMERA AND AR */
-a-scene {
-    position: fixed !important;
+/* AR CAMERA */
+
+#arScene {
+    position: fixed;
     inset: 0;
-    width: 100vw !important;
-    height: 100dvh !important;
+    width: 100%;
+    height: 100%;
     z-index: 1;
+    background: transparent !important;
 }
 
-video,
-#arjs-video,
-.arjs-video {
-    object-fit: contain !important;
-}
+/*
+IMPORTANT:
+Do not force CSS width, height or object-fit
+onto the AR.js camera video element.
+AR.js manages camera positioning itself.
+*/
 
 /* HUD */
+
 #hud {
     position: fixed;
     inset: 0;
@@ -60,196 +62,136 @@ video,
     pointer-events: none;
 }
 
-#hud::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,255,231,0.015) 2px,
-        rgba(0,255,231,0.015) 4px
-    );
-    pointer-events: none;
-}
+/* TOP STATUS */
 
-/* CORNERS */
-.corner {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-}
-
-.corner-tl {
-    top: 12px;
-    left: 12px;
-    border-top: 2px solid var(--accent);
-    border-left: 2px solid var(--accent);
-}
-
-.corner-tr {
-    top: 12px;
-    right: 12px;
-    border-top: 2px solid var(--accent);
-    border-right: 2px solid var(--accent);
-}
-
-.corner-bl {
-    bottom: 12px;
-    left: 12px;
-    border-bottom: 2px solid var(--accent);
-    border-left: 2px solid var(--accent);
-}
-
-.corner-br {
-    bottom: 12px;
-    right: 12px;
-    border-bottom: 2px solid var(--accent);
-    border-right: 2px solid var(--accent);
-}
-
-/* TOP BAR */
 #topbar {
     position: absolute;
-    top: max(20px, env(safe-area-inset-top));
+    top: max(12px, env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
-    background: var(--hud-bg);
-    border: var(--panel-border);
-    border-radius: 6px;
-    padding: 9px 15px;
+    background: var(--panel);
+    border: var(--border);
+    border-radius: 10px;
+    padding: 10px;
     display: flex;
     align-items: center;
     gap: 12px;
-    backdrop-filter: blur(8px);
-    max-width: calc(100vw - 35px);
+    max-width: 96vw;
 }
 
-#topbar .label {
-    color: rgba(0,255,231,0.55);
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+.status {
+    text-align: center;
 }
 
-#topbar .value {
+.status-label {
+    font-size: 9px;
     color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.status-value {
+    font-size: 11px;
+    margin-top: 4px;
     white-space: nowrap;
 }
 
 #gps-dot {
-    width: 8px;
-    height: 8px;
-    flex-shrink: 0;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
-    background: var(--warn);
-    box-shadow: 0 0 6px var(--warn);
+    background: orange;
+    flex-shrink: 0;
 }
 
 #gps-dot.active {
-    background: var(--accent);
-    box-shadow: 0 0 6px var(--accent);
-    animation: pulse 1.6s ease-in-out infinite;
+    background: #00ff88;
+    box-shadow: 0 0 10px #00ff88;
 }
 
-@keyframes pulse {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.4; }
+/* COMPASS */
+
+#compass {
+    position: absolute;
+    top: 90px;
+    right: 15px;
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* DIRECTION PANEL */
+#compass-needle {
+    width: 5px;
+    height: 55px;
+    background: linear-gradient(
+        to bottom,
+        red 50%,
+        white 50%
+    );
+    border-radius: 5px;
+    transition: transform 0.2s;
+}
+
+#compass-label {
+    position: absolute;
+    bottom: -18px;
+    font-size: 11px;
+    color: var(--accent);
+}
+
+/* DIRECTION */
+
 #direction-panel {
     position: absolute;
     bottom: 230px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--hud-bg);
-    border: var(--panel-border);
-    border-radius: 8px;
-    padding: 12px 16px;
+    width: min(90vw, 390px);
+    background: var(--panel);
+    border: var(--border);
+    border-radius: 12px;
+    padding: 14px;
     display: none;
     align-items: center;
-    gap: 12px;
-    min-width: 240px;
-    max-width: min(90vw, 440px);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 30px rgba(0,255,231,0.08);
+    gap: 14px;
 }
 
-#dir-arrow-svg {
-    width: 40px;
-    height: 40px;
+#direction-arrow {
     flex-shrink: 0;
-    transition: transform 0.4s ease;
-    filter: drop-shadow(0 0 6px var(--accent));
+    width: 42px;
+    height: 42px;
+    transition: transform 0.3s;
 }
 
-#dir-text {
-    font-size: 19px;
-    font-weight: 700;
-    color: #fff;
-    line-height: 1.2;
+#direction-text {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1.3;
 }
 
-#dir-dist {
-    font-family: var(--font-mono);
-    font-size: 12px;
+#direction-distance {
+    font-size: 13px;
     color: var(--accent);
-    margin-top: 4px;
-}
-
-/* COMPASS */
-#compass {
-    position: absolute;
-    top: 85px;
-    right: 20px;
-    width: 75px;
-    height: 75px;
-    background: var(--hud-bg);
-    border: var(--panel-border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(8px);
-}
-
-#compass-needle {
-    width: 4px;
-    height: 55px;
-    background: linear-gradient(
-        to bottom,
-        #ff3b3b 0%,
-        #ff3b3b 50%,
-        rgba(255,255,255,0.5) 50%
-    );
-    border-radius: 2px;
-    transition: transform 0.25s ease;
-}
-
-#compass-label {
-    position: absolute;
-    bottom: -19px;
-    color: var(--accent);
-    font-size: 10px;
-    letter-spacing: 2px;
+    margin-top: 5px;
 }
 
 /* MINI MAP */
+
 #map-container {
     position: absolute;
-    bottom: max(20px, env(safe-area-inset-bottom));
-    right: 20px;
+    bottom: max(15px, env(safe-area-inset-bottom));
+    right: 15px;
     width: 180px;
     height: 180px;
-    border: var(--panel-border);
-    border-radius: 6px;
+    background: #111;
+    border: var(--border);
+    border-radius: 12px;
     overflow: hidden;
     pointer-events: auto;
-    box-shadow: 0 0 20px rgba(0,255,231,0.1);
 }
 
 #map {
@@ -257,211 +199,190 @@ video,
     height: 100%;
 }
 
-#map-label {
+#map-title {
     position: absolute;
     top: 5px;
     left: 8px;
-    color: var(--accent);
-    font-size: 9px;
-    letter-spacing: 2px;
     z-index: 2;
-    pointer-events: none;
+    background: var(--panel);
+    color: var(--accent);
+    padding: 4px;
+    font-size: 10px;
 }
 
-/* VOICE TOAST */
-#voice-toast {
+/* DISTANCE AND ETA */
+
+#stats {
     position: absolute;
-    top: 130px;
-    left: 20px;
-    background: var(--hud-bg);
-    border: 1px solid rgba(255,106,0,0.3);
-    border-left: 3px solid var(--accent2);
-    border-radius: 4px;
-    padding: 10px 16px;
-    max-width: 220px;
-    opacity: 0;
-    transform: translateX(-10px);
-    transition: all 0.35s ease;
+    bottom: max(15px, env(safe-area-inset-bottom));
+    left: 15px;
+    background: var(--panel);
+    border: var(--border);
+    border-radius: 10px;
+    padding: 15px;
+    display: none;
 }
 
-#voice-toast.show {
-    opacity: 1;
-    transform: translateX(0);
+.stat-title {
+    color: var(--accent);
+    font-size: 10px;
+    margin-bottom: 5px;
 }
 
-#voice-text {
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.4;
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 12px;
 }
 
-/* STATS */
-#stats-panel {
-    position: absolute;
-    bottom: max(20px, env(safe-area-inset-bottom));
-    left: 20px;
-    background: var(--hud-bg);
-    border: var(--panel-border);
-    border-radius: 6px;
-    padding: 12px 16px;
-    backdrop-filter: blur(8px);
-}
-
-.stat-row {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 9px;
-}
-
-.stat-row:last-child {
+.stat-value:last-child {
     margin-bottom: 0;
 }
 
-.stat-label {
-    color: rgba(0,255,231,0.55);
-    font-size: 9px;
-    letter-spacing: 1px;
-}
-
-.stat-val {
-    color: #fff;
-    font-family: var(--font-mono);
-    font-size: 15px;
-}
-
 /* START BUTTON */
+
 #startBtn {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0,10,20,0.85);
-    border: 1.5px solid var(--accent);
+    padding: 18px 25px;
+    background: rgba(0,0,0,0.85);
     color: var(--accent);
-    font-family: var(--font-main);
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 16px 30px;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: bold;
     cursor: pointer;
     pointer-events: auto;
     white-space: nowrap;
 }
 
-#startBtn:active {
-    transform: translate(-50%, -50%) scale(0.97);
-}
+/* LOADING */
 
 #loading {
+    display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.85);
+    padding: 20px;
+    border-radius: 12px;
     color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    letter-spacing: 2px;
-    display: none;
     text-align: center;
-    width: 90%;
+    font-size: 14px;
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 2px solid rgba(0,255,231,0.2);
+    width: 35px;
+    height: 35px;
+    border: 3px solid #333;
     border-top-color: var(--accent);
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    animation: spin 1s linear infinite;
     margin: 0 auto 12px;
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ROUTE STEPS */
-#steps-toggle {
+
+#stepsBtn {
     position: absolute;
-    top: 85px;
-    left: 20px;
-    background: var(--hud-bg);
-    border: var(--panel-border);
-    padding: 8px 12px;
+    top: 90px;
+    left: 15px;
+    background: var(--panel);
+    border: var(--border);
     color: var(--accent);
-    font-family: var(--font-main);
-    font-size: 11px;
-    letter-spacing: 1px;
-    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
     pointer-events: auto;
+    cursor: pointer;
     display: none;
 }
 
-#steps-scroll {
+#steps-container {
     position: absolute;
-    top: 125px;
-    left: 20px;
-    width: 240px;
-    max-height: 0;
-    overflow: hidden;
-    pointer-events: auto;
-    transition: max-height 0.3s;
-}
-
-#steps-scroll.open {
-    max-height: min(40vh, 300px);
+    top: 132px;
+    left: 15px;
+    width: min(250px, 70vw);
+    max-height: 38vh;
     overflow-y: auto;
+    background: rgba(0,0,0,0.88);
+    border: var(--border);
+    border-radius: 8px;
+    display: none;
+    pointer-events: auto;
 }
 
-#steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.step-item {
-    background: var(--hud-bg);
-    border: var(--panel-border);
-    padding: 8px 12px;
+.route-step {
+    padding: 10px;
     font-size: 12px;
-    color: rgba(255,255,255,0.7);
-    display: flex;
-    gap: 8px;
+    border-bottom: 1px solid #333;
+    line-height: 1.4;
 }
 
-.step-item.active {
-    border-color: var(--accent);
-    color: #fff;
-}
-
-.step-num {
+.route-step.active {
     color: var(--accent);
-    font-family: var(--font-mono);
+    background: rgba(0,255,231,0.1);
 }
 
-/* MOBILE OPTIMIZATION */
+/* VOICE NOTIFICATION */
+
+#voice-toast {
+    position: absolute;
+    top: 150px;
+    left: 15px;
+    max-width: 230px;
+    background: var(--panel);
+    border-left: 3px solid var(--orange);
+    padding: 12px;
+    border-radius: 5px;
+    font-size: 13px;
+    display: none;
+}
+
+/* BACK BUTTON */
+
+#backBtn {
+    position: absolute;
+    bottom: 210px;
+    left: 15px;
+    padding: 10px 15px;
+    background: var(--panel);
+    color: var(--accent);
+    border: var(--border);
+    border-radius: 8px;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+/* MOBILE */
+
 @media (max-width: 600px) {
 
     #topbar {
-        top: 12px;
-        gap: 8px;
-        padding: 7px 10px;
+        gap: 7px;
+        padding: 8px;
     }
 
-    #topbar .label {
+    .status-label {
         font-size: 8px;
     }
 
-    #topbar .value {
-        font-size: 10px;
+    .status-value {
+        font-size: 9px;
     }
 
     #compass {
-        top: 80px;
-        right: 12px;
         width: 55px;
         height: 55px;
+        top: 80px;
     }
 
     #compass-needle {
@@ -471,50 +392,48 @@ video,
     #map-container {
         width: 130px;
         height: 130px;
-        right: 12px;
-        bottom: 15px;
+        right: 10px;
+        bottom: 12px;
     }
 
-    #stats-panel {
-        left: 12px;
-        bottom: 15px;
+    #stats {
+        left: 10px;
+        bottom: 12px;
         padding: 10px;
     }
 
-    .stat-val {
-        font-size: 13px;
+    .stat-value {
+        font-size: 14px;
     }
 
     #direction-panel {
         bottom: 170px;
-        min-width: 0;
-        width: min(88vw, 340px);
-        padding: 10px 12px;
+        padding: 10px;
     }
 
-    #dir-text {
-        font-size: 16px;
+    #direction-text {
+        font-size: 15px;
     }
 
-    #dir-arrow-svg {
-        width: 34px;
-        height: 34px;
+    #backBtn {
+        bottom: 145px;
+        left: 10px;
+        font-size: 11px;
     }
 
-    #steps-toggle {
+    #stepsBtn {
+        left: 10px;
         top: 80px;
-        left: 12px;
     }
 
-    #steps-scroll {
-        top: 120px;
-        left: 12px;
-        width: min(230px, 65vw);
+    #steps-container {
+        left: 10px;
+        top: 125px;
     }
 
     #voice-toast {
-        top: 125px;
-        left: 12px;
+        top: 150px;
+        left: 10px;
         max-width: 180px;
     }
 }
@@ -523,18 +442,15 @@ video,
 
 <body>
 
-<!-- AR SCENE -->
+<!-- AR CAMERA SCENE -->
+
 <a-scene
     id="arScene"
     embedded
     arjs="sourceType: webcam;
-          sourceWidth: 1280;
-          sourceHeight: 720;
-          displayWidth: 1280;
-          displayHeight: 720;
           debugUIEnabled: false;"
-    vr-mode-ui="enabled: false"
-    renderer="antialias: true; alpha: true">
+    renderer="alpha: true; antialias: true"
+    vr-mode-ui="enabled: false">
 
     <a-camera
         id="arCamera"
@@ -545,128 +461,142 @@ video,
 </a-scene>
 
 <!-- HUD -->
+
 <div id="hud">
 
-    <div class="corner corner-tl"></div>
-    <div class="corner corner-tr"></div>
-    <div class="corner corner-bl"></div>
-    <div class="corner corner-br"></div>
+    <!-- TOP STATUS -->
 
-    <!-- TOP BAR -->
     <div id="topbar">
 
         <div id="gps-dot"></div>
 
-        <div>
-            <div class="label">GPS</div>
-            <div class="value" id="gps-coords">--</div>
+        <div class="status">
+            <div class="status-label">GPS</div>
+            <div class="status-value" id="gps-value">--</div>
         </div>
 
-        <div>
-            <div class="label">Heading</div>
-            <div class="value" id="heading-val">--°</div>
+        <div class="status">
+            <div class="status-label">HEADING</div>
+            <div class="status-value" id="heading-value">--°</div>
         </div>
 
-        <div>
-            <div class="label">Accuracy</div>
-            <div class="value" id="acc-val">--m</div>
+        <div class="status">
+            <div class="status-label">ACCURACY</div>
+            <div class="status-value" id="accuracy-value">--m</div>
         </div>
 
     </div>
 
     <!-- COMPASS -->
+
     <div id="compass">
+
         <div id="compass-needle"></div>
         <div id="compass-label">N</div>
+
     </div>
 
-    <!-- DIRECTION PANEL -->
+    <!-- DIRECTION -->
+
     <div id="direction-panel">
 
         <svg
-            id="dir-arrow-svg"
+            id="direction-arrow"
             viewBox="0 0 44 44"
             fill="none">
 
             <polygon
-                id="dir-arrow-poly"
+                id="arrow-poly"
                 points="22,4 38,36 22,28 6,36"
-                fill="#00ffe7"/>
+                fill="#00ffe7">
+            </polygon>
 
         </svg>
 
         <div>
-            <div id="dir-text">Loading…</div>
-            <div id="dir-dist"></div>
+            <div id="direction-text">
+                Finding route...
+            </div>
+
+            <div id="direction-distance"></div>
         </div>
 
     </div>
 
-    <!-- VOICE TOAST -->
-    <div id="voice-toast">
-        <span>🔊</span>
-        <span id="voice-text"></span>
-    </div>
-
     <!-- ROUTE STEPS -->
-    <button id="steps-toggle" onclick="toggleSteps()">
+
+    <button id="stepsBtn" onclick="toggleSteps()">
         ▼ ROUTE STEPS
     </button>
 
-    <div id="steps-scroll">
+    <div id="steps-container">
         <div id="steps-list"></div>
     </div>
 
     <!-- STATS -->
-    <div id="stats-panel" style="display:none;">
 
-        <div class="stat-row">
-            <span class="stat-label">DISTANCE LEFT</span>
-            <span class="stat-val" id="dist-left">--</span>
-        </div>
+    <div id="stats">
 
-        <div class="stat-row">
-            <span class="stat-label">EST. TIME</span>
-            <span class="stat-val" id="eta-val">--</span>
-        </div>
+        <div class="stat-title">DISTANCE LEFT</div>
+        <div class="stat-value" id="distance-left">--</div>
+
+        <div class="stat-title">ESTIMATED TIME</div>
+        <div class="stat-value" id="eta">--</div>
 
     </div>
 
     <!-- MINI MAP -->
+
     <div id="map-container">
-        <div id="map-label">MINI MAP</div>
+
+        <div id="map-title">MINI MAP</div>
         <div id="map"></div>
+
     </div>
 
-    <!-- START BUTTON -->
-    <button id="startBtn" onclick="requestPermissions()">
+    <!-- START -->
+
+    <button id="startBtn" onclick="startAR()">
         ◉ START AR NAV
     </button>
 
     <!-- LOADING -->
+
     <div id="loading">
         <div class="spinner"></div>
-        ACQUIRING SIGNAL…
+        ACQUIRING GPS...
     </div>
+
+    <!-- VOICE TOAST -->
+
+    <div id="voice-toast"></div>
+
+    <!-- BACK -->
+
+    <button id="backBtn" onclick="goHome()">
+        ← BACK
+    </button>
 
 </div>
 
 <script>
 
 /* CONFIGURATION */
-const DESTINATION = "Vellore Institute of Technology";
-const WAYPOINT_TRIGGER_RADIUS = 15;
-const VOICE_AHEAD_DISTANCE = 40;
-const MAX_GPS_ACCURACY = 30;
 
-/* STATE */
+const DESTINATION = "Vellore Institute of Technology";
+const WAYPOINT_RADIUS = 15;
+const MAX_GPS_ACCURACY = 30;
+const VOICE_AHEAD_DISTANCE = 40;
+
+/* VARIABLES */
+
 let map;
 let directionsService;
 let directionsRenderer;
 let userMarker;
 
 let routeSteps = [];
-let currentStepIndex = 0;
+let currentStep = 0;
 
 let userLat = 0;
 let userLng = 0;
@@ -674,142 +604,179 @@ let deviceHeading = 0;
 let headingAvailable = false;
 
 let watchId = null;
-let lastVoiceStep = -1;
-let arObjects = [];
 let navigating = false;
+let lastVoiceStep = -1;
+let compassInitialized = false;
 
-let lastPosition = null;
-let routeLeg = null;
+let arObjects = [];
+let toastTimeout;
 
-/* DOM HELPER */
-function el(id) {
+/* HELPERS */
+
+function $(id) {
     return document.getElementById(id);
 }
 
-/* PERMISSIONS */
-async function requestPermissions() {
+function toRad(value) {
+    return value * Math.PI / 180;
+}
 
-    el('startBtn').style.display = 'none';
-    el('loading').style.display = 'block';
+function toDeg(value) {
+    return value * 180 / Math.PI;
+}
+
+function formatDistance(meters) {
+    if (meters >= 1000) {
+        return (meters / 1000).toFixed(1) + " km";
+    }
+
+    return Math.round(meters) + " m";
+}
+
+/* LOCATION DISTANCE */
+
+function haversine(lat1, lng1, lat2, lng2) {
+
+    const R = 6371000;
+
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLng / 2) ** 2;
+
+    return 2 * R * Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1 - a)
+    );
+}
+
+/* BEARING */
+
+function getBearing(lat1, lng1, lat2, lng2) {
+
+    const dLng = toRad(lng2 - lng1);
+
+    const y =
+        Math.sin(dLng) * Math.cos(toRad(lat2));
+
+    const x =
+        Math.cos(toRad(lat1)) *
+        Math.sin(toRad(lat2)) -
+        Math.sin(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.cos(dLng);
+
+    return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+/* START AR */
+
+async function startAR() {
+
+    $("startBtn").style.display = "none";
+    $("loading").style.display = "block";
 
     if (!window.isSecureContext) {
-        alert("AR navigation requires HTTPS or localhost.");
-        resetUI();
+        alert("Please open this website using HTTPS.");
+        resetStart();
         return;
     }
 
     if (!navigator.geolocation) {
-        alert("Geolocation is not supported on this device.");
-        resetUI();
+        alert("Your browser does not support GPS.");
+        resetStart();
         return;
     }
 
     if (!window.google || !google.maps) {
-        alert("Google Maps could not be loaded. Check your API key.");
-        resetUI();
+        alert("Google Maps failed to load. Check your API key.");
+        resetStart();
         return;
     }
 
-    try {
+    /* iPhone compass permission */
 
-        if (
-            typeof DeviceOrientationEvent !== 'undefined' &&
-            typeof DeviceOrientationEvent.requestPermission === 'function'
-        ) {
-            try {
-                await DeviceOrientationEvent.requestPermission();
-            } catch (error) {
-                console.warn("Compass permission:", error);
-            }
+    if (
+        typeof DeviceOrientationEvent !== "undefined" &&
+        typeof DeviceOrientationEvent.requestPermission === "function"
+    ) {
+        try {
+            await DeviceOrientationEvent.requestPermission();
+        } catch (error) {
+            console.warn("Orientation permission:", error);
         }
-
-        navigator.geolocation.getCurrentPosition(
-            startNavigation,
-            function(error) {
-                alert("Location error: " + error.message);
-                resetUI();
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 20000,
-                maximumAge: 0
-            }
-        );
-
-    } catch (error) {
-
-        console.error(error);
-        alert("Unable to start navigation.");
-        resetUI();
-
     }
+
+    navigator.geolocation.getCurrentPosition(
+        createNavigation,
+        function(error) {
+            alert("GPS Error: " + error.message);
+            resetStart();
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 20000,
+            maximumAge: 0
+        }
+    );
 }
 
 /* RESET */
-function resetUI() {
 
-    el('startBtn').style.display = '';
-    el('loading').style.display = 'none';
-
+function resetStart() {
+    $("loading").style.display = "none";
+    $("startBtn").style.display = "block";
 }
 
-/* START NAVIGATION */
-function startNavigation(position) {
+/* CREATE NAVIGATION */
+
+function createNavigation(position) {
 
     userLat = position.coords.latitude;
     userLng = position.coords.longitude;
-    lastPosition = position;
+
+    updateGPSDisplay(position);
 
     const origin = {
         lat: userLat,
         lng: userLng
     };
 
-    el('gps-coords').textContent =
-        userLat.toFixed(5) + ', ' + userLng.toFixed(5);
-
-    el('acc-val').textContent =
-        Math.round(position.coords.accuracy) + 'm';
-
-    map = new google.maps.Map(el('map'), {
-
+    map = new google.maps.Map($("map"), {
         center: origin,
-        zoom: 16,
-        disableDefaultUI: true,
-        styles: darkMapStyle()
-
+        zoom: 17,
+        disableDefaultUI: true
     });
 
     userMarker = new google.maps.Marker({
-
         position: origin,
         map: map,
-
         icon: {
             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
             scale: 5,
-            fillColor: '#00ffe7',
+            fillColor: "#00ffe7",
             fillOpacity: 1,
-            strokeColor: '#ffffff',
+            strokeColor: "#ffffff",
             strokeWeight: 1,
             rotation: 0
         }
-
     });
 
-    directionsService = new google.maps.DirectionsService();
+    directionsService =
+        new google.maps.DirectionsService();
 
-    directionsRenderer = new google.maps.DirectionsRenderer({
-
-        suppressMarkers: false,
-
-        polylineOptions: {
-            strokeColor: '#00ffe7',
-            strokeWeight: 4,
-            strokeOpacity: 0.85
-        }
-
-    });
+    directionsRenderer =
+        new google.maps.DirectionsRenderer({
+            suppressMarkers: false,
+            polylineOptions: {
+                strokeColor: "#00ffe7",
+                strokeWeight: 4
+            }
+        });
 
     directionsRenderer.setMap(map);
 
@@ -828,204 +795,224 @@ function startNavigation(position) {
             processRoute(result);
 
             if (!routeSteps.length) {
-                alert("No route steps were returned.");
-                resetUI();
+                alert("No walking route found.");
+                resetStart();
                 return;
             }
 
-            el('loading').style.display = 'none';
-            el('direction-panel').style.display = 'flex';
-            el('stats-panel').style.display = 'block';
-            el('steps-toggle').style.display = 'block';
+            $("loading").style.display = "none";
+            $("direction-panel").style.display = "flex";
+            $("stats").style.display = "block";
+            $("stepsBtn").style.display = "block";
 
             navigating = true;
 
-            startTracking();
             setupCompass();
-            updateDirectionToNextStep();
+            startTracking();
+            updateDirection();
 
         } else {
 
-            alert("Directions error: " + status);
-            resetUI();
+            alert("Unable to calculate route: " + status);
+            resetStart();
 
         }
-
     });
 }
 
-/* ROUTE PROCESSING */
+/* PROCESS ROUTE */
+
 function processRoute(result) {
 
-    routeLeg = result.routes[0].legs[0];
+    const leg = result.routes[0].legs[0];
 
-    routeSteps = routeLeg.steps.map(function(step, index) {
+    routeSteps = leg.steps.map(function(step, index) {
 
         return {
-
             index: index,
             instruction: stripHTML(step.instructions),
-            maneuver: step.maneuver || '',
-            distMeters: step.distance.value,
-            distText: step.distance.text,
-            durationSeconds: step.duration.value,
+            maneuver: step.maneuver || "",
             lat: step.end_location.lat(),
             lng: step.end_location.lng(),
             startLat: step.start_location.lat(),
-            startLng: step.start_location.lng()
-
+            startLng: step.start_location.lng(),
+            distance: step.distance.value,
+            duration: step.duration.value
         };
-
     });
 
-    currentStepIndex = 0;
+    currentStep = 0;
     lastVoiceStep = -1;
+
+    $("distance-left").textContent =
+        leg.distance.text;
+
+    $("eta").textContent =
+        leg.duration.text;
+
+    createRouteList();
 
     placeARArrows(routeSteps.slice(0, 8));
 
-    const list = el('steps-list');
-    list.innerHTML = '';
+    if (routeSteps.length > 0) {
 
-    routeSteps.forEach(function(step, index) {
+        updateInstruction();
 
-        const item = document.createElement('div');
-
-        item.className =
-            'step-item' + (index === 0 ? ' active' : '');
-
-        item.id = 'step-' + index;
-
-        const number = document.createElement('span');
-        number.className = 'step-num';
-        number.textContent = String(index + 1);
-
-        const instruction = document.createElement('span');
-        instruction.textContent = step.instruction;
-
-        item.appendChild(number);
-        item.appendChild(instruction);
-
-        list.appendChild(item);
-
-    });
-
-    el('eta-val').textContent = routeLeg.duration.text;
-    el('dist-left').textContent = routeLeg.distance.text;
-
-    if (routeSteps.length) {
-
-        updateDirectionPanel(routeSteps[0]);
-
-        speakInstruction(
-            "Navigation started. " + routeSteps[0].instruction
+        speak(
+            "Navigation started. " +
+            routeSteps[0].instruction
         );
-
     }
 }
 
+/* REMOVE HTML */
+
+function stripHTML(html) {
+
+    const element = document.createElement("div");
+
+    element.innerHTML = html;
+
+    return element.textContent || "";
+}
+
+/* ROUTE LIST */
+
+function createRouteList() {
+
+    const list = $("steps-list");
+
+    list.innerHTML = "";
+
+    routeSteps.forEach(function(step, index) {
+
+        const item = document.createElement("div");
+
+        item.className =
+            "route-step" + (index === 0 ? " active" : "");
+
+        item.id = "route-" + index;
+
+        item.textContent =
+            (index + 1) + ". " + step.instruction;
+
+        list.appendChild(item);
+    });
+}
+
 /* AR ARROWS */
+
 function placeARArrows(steps) {
 
-    const scene = el('arScene');
+    const scene = $("arScene");
 
     arObjects.forEach(function(object) {
 
         if (object.parentNode) {
             object.parentNode.removeChild(object);
         }
-
     });
 
     arObjects = [];
 
     steps.forEach(function(step, index) {
 
-        const group = document.createElement('a-entity');
+        const group = document.createElement("a-entity");
 
         group.setAttribute(
-            'gps-entity-place',
-            'latitude: ' + step.lat + '; longitude: ' + step.lng
+            "gps-entity-place",
+            "latitude: " + step.lat +
+            "; longitude: " + step.lng
         );
 
-        group.setAttribute('position', '0 2.5 0');
+        group.setAttribute("position", "0 2.5 0");
 
-        const bearing = computeBearing(
+        const bearing = getBearing(
             step.startLat,
             step.startLng,
             step.lat,
             step.lng
         );
 
-        group.setAttribute('rotation', '0 ' + (-bearing) + ' 0');
-
-        /* ARROW BODY */
-        const body = document.createElement('a-box');
-
-        body.setAttribute(
-            'color',
-            index === 0 ? '#00ffe7' : '#ff6a00'
-        );
-
-        body.setAttribute('width', '0.5');
-        body.setAttribute('height', '0.18');
-        body.setAttribute('depth', '1.5');
-        body.setAttribute('position', '0 0 -0.3');
-        body.setAttribute('opacity', '0.9');
-
-        /* ARROW HEAD */
-        const head = document.createElement('a-cone');
-
-        head.setAttribute(
-            'color',
-            index === 0 ? '#00ffe7' : '#ff6a00'
-        );
-
-        head.setAttribute('radius-bottom', '0.55');
-        head.setAttribute('radius-top', '0');
-        head.setAttribute('height', '0.9');
-        head.setAttribute('rotation', '-90 0 0');
-        head.setAttribute('position', '0 0 -1.4');
-        head.setAttribute('opacity', '0.9');
-
-        /* STEP NUMBER */
-        const label = document.createElement('a-text');
-
-        label.setAttribute('value', String(index + 1));
-        label.setAttribute('align', 'center');
-        label.setAttribute('color', '#ffffff');
-        label.setAttribute('scale', '2 2 2');
-        label.setAttribute('position', '0 1.0 0');
-        label.setAttribute('side', 'double');
-
-        /* POLE */
-        const pole = document.createElement('a-cylinder');
-
-        pole.setAttribute('color', '#00ffe7');
-        pole.setAttribute('radius', '0.04');
-        pole.setAttribute('height', '2');
-        pole.setAttribute('opacity', '0.45');
-        pole.setAttribute('position', '0 -1 0');
-
         group.setAttribute(
-            'animation__bob',
-            'property: position; from: 0 2.5 0; ' +
-            'to: 0 3.0 0; dir: alternate; loop: true; ' +
-            'dur: 1800; easing: easeInOutSine'
+            "rotation",
+            "0 " + (-bearing) + " 0"
         );
+
+        /* Arrow body */
+
+        const body = document.createElement("a-box");
+
+        body.setAttribute("width", "0.45");
+        body.setAttribute("height", "0.15");
+        body.setAttribute("depth", "1.5");
+        body.setAttribute("position", "0 0 -0.25");
+        body.setAttribute("color",
+            index === 0 ? "#00ffe7" : "#ff6a00"
+        );
+        body.setAttribute("opacity", "0.9");
+
+        /* Arrow head */
+
+        const head = document.createElement("a-cone");
+
+        head.setAttribute("radius-bottom", "0.5");
+        head.setAttribute("radius-top", "0");
+        head.setAttribute("height", "0.85");
+        head.setAttribute("rotation", "-90 0 0");
+        head.setAttribute("position", "0 0 -1.4");
+        head.setAttribute("color",
+            index === 0 ? "#00ffe7" : "#ff6a00"
+        );
+
+        /* Number */
+
+        const label = document.createElement("a-text");
+
+        label.setAttribute(
+            "value",
+            String(index + 1)
+        );
+
+        label.setAttribute("align", "center");
+        label.setAttribute("color", "#ffffff");
+        label.setAttribute("scale", "2 2 2");
+        label.setAttribute("position", "0 1 0");
+        label.setAttribute("side", "double");
+
+        /* Pole */
+
+        const pole = document.createElement("a-cylinder");
+
+        pole.setAttribute("radius", "0.04");
+        pole.setAttribute("height", "2");
+        pole.setAttribute("color", "#00ffe7");
+        pole.setAttribute("opacity", "0.5");
+        pole.setAttribute("position", "0 -1 0");
 
         group.appendChild(body);
         group.appendChild(head);
         group.appendChild(label);
         group.appendChild(pole);
 
+        group.setAttribute(
+            "animation__bob",
+            "property: position; " +
+            "from: 0 2.5 0; " +
+            "to: 0 3.1 0; " +
+            "dir: alternate; " +
+            "loop: true; " +
+            "dur: 1800"
+        );
+
         scene.appendChild(group);
 
         arObjects.push(group);
-
     });
 }
 
 /* GPS TRACKING */
+
 function startTracking() {
 
     if (watchId !== null) {
@@ -1033,11 +1020,10 @@ function startTracking() {
     }
 
     watchId = navigator.geolocation.watchPosition(
-
-        onLocationUpdate,
+        updateLocation,
 
         function(error) {
-            console.warn("GPS tracking error:", error.message);
+            console.warn("GPS error:", error.message);
         },
 
         {
@@ -1045,56 +1031,69 @@ function startTracking() {
             maximumAge: 1000,
             timeout: 15000
         }
-
     );
 }
 
-/* GPS UPDATE */
-function onLocationUpdate(position) {
+/* UPDATE LOCATION */
+
+function updateLocation(position) {
 
     userLat = position.coords.latitude;
     userLng = position.coords.longitude;
-    lastPosition = position;
 
-    const accuracy = position.coords.accuracy;
+    updateGPSDisplay(position);
 
-    el('gps-coords').textContent =
-        userLat.toFixed(5) + ', ' + userLng.toFixed(5);
+    const location = {
+        lat: userLat,
+        lng: userLng
+    };
 
-    el('acc-val').textContent =
-        Math.round(accuracy) + 'm';
-
-    el('gps-dot').classList.toggle(
-        'active',
-        accuracy <= MAX_GPS_ACCURACY
-    );
-
-    if (userMarker && map) {
-
-        const location = {
-            lat: userLat,
-            lng: userLng
-        };
-
+    if (userMarker) {
         userMarker.setPosition(location);
+    }
+
+    if (map) {
         map.panTo(location);
-
     }
 
-    updateDirectionToNextStep();
+    updateDirection();
 
-    if (accuracy <= MAX_GPS_ACCURACY) {
-        checkStepProgress();
+    if (
+        position.coords.accuracy <= MAX_GPS_ACCURACY
+    ) {
+        updateStepProgress();
     }
+
+    updateRemainingDistance();
+}
+
+/* GPS STATUS */
+
+function updateGPSDisplay(position) {
+
+    $("gps-value").textContent =
+        position.coords.latitude.toFixed(4) +
+        ", " +
+        position.coords.longitude.toFixed(4);
+
+    $("accuracy-value").textContent =
+        Math.round(position.coords.accuracy) + "m";
+
+    $("gps-dot").classList.toggle(
+        "active",
+        position.coords.accuracy <= MAX_GPS_ACCURACY
+    );
 }
 
 /* WAYPOINT PROGRESS */
-function checkStepProgress() {
+
+function updateStepProgress() {
 
     if (!navigating) return;
-    if (currentStepIndex >= routeSteps.length) return;
 
-    const step = routeSteps[currentStepIndex];
+    if (currentStep >= routeSteps.length) return;
+
+    const step = routeSteps[currentStep];
 
     const distance = haversine(
         userLat,
@@ -1103,72 +1102,155 @@ function checkStepProgress() {
         step.lng
     );
 
-    if (distance <= WAYPOINT_TRIGGER_RADIUS) {
+    if (distance <= WAYPOINT_RADIUS) {
 
-        currentStepIndex++;
+        currentStep++;
 
-        if (currentStepIndex < routeSteps.length) {
+        if (currentStep < routeSteps.length) {
 
-            highlightStep(currentStepIndex);
+            updateInstruction();
 
-            updateDirectionPanel(
-                routeSteps[currentStepIndex]
+            speak(
+                routeSteps[currentStep].instruction
             );
 
-            speakInstruction(
-                routeSteps[currentStepIndex].instruction
-            );
-
-            lastVoiceStep = currentStepIndex;
+            lastVoiceStep = currentStep;
 
         } else {
 
             navigating = false;
 
-            el('dir-text').textContent = 'Destination Reached!';
-            el('dir-dist').textContent = '';
+            $("direction-text").textContent =
+                "Destination Reached!";
 
-            speakInstruction(
+            $("direction-distance").textContent = "";
+
+            speak(
                 "You have arrived at your destination."
             );
 
             if (watchId !== null) {
+
                 navigator.geolocation.clearWatch(watchId);
+
                 watchId = null;
             }
-
         }
 
-        updateRemainingDistance();
         return;
     }
 
     if (
-        currentStepIndex !== lastVoiceStep &&
-        distance < VOICE_AHEAD_DISTANCE
+        distance < VOICE_AHEAD_DISTANCE &&
+        currentStep !== lastVoiceStep
     ) {
 
-        speakInstruction(
-            "In " + formatDist(distance) +
-            ", " + step.instruction
+        speak(
+            "In " +
+            formatDistance(distance) +
+            ", " +
+            step.instruction
         );
 
-        lastVoiceStep = currentStepIndex;
+        lastVoiceStep = currentStep;
     }
-
-    updateRemainingDistance();
 }
 
-/* REMAINING DISTANCE */
-function updateRemainingDistance() {
+/* CURRENT INSTRUCTION */
 
-    if (currentStepIndex >= routeSteps.length) {
-        el('dist-left').textContent = '0 m';
-        el('eta-val').textContent = '0 min';
+function updateInstruction() {
+
+    if (currentStep >= routeSteps.length) {
         return;
     }
 
-    const step = routeSteps[currentStepIndex];
+    const step = routeSteps[currentStep];
+
+    $("direction-text").textContent =
+        step.instruction;
+
+    const isTurn =
+        /turn|left|right|merge/i.test(
+            step.maneuver + " " + step.instruction
+        );
+
+    $("arrow-poly").setAttribute(
+        "fill",
+        isTurn ? "#ff6a00" : "#00ffe7"
+    );
+
+    document.querySelectorAll(".route-step").forEach(
+        function(item) {
+            item.classList.remove("active");
+        }
+    );
+
+    const active = $("route-" + currentStep);
+
+    if (active) {
+        active.classList.add("active");
+    }
+
+    updateDirection();
+}
+
+/* DIRECTION */
+
+function updateDirection() {
+
+    if (!navigating) return;
+
+    if (currentStep >= routeSteps.length) return;
+
+    const step = routeSteps[currentStep];
+
+    const bearing = getBearing(
+        userLat,
+        userLng,
+        step.lat,
+        step.lng
+    );
+
+    if (headingAvailable) {
+
+        let relative =
+            (bearing - deviceHeading + 360) % 360;
+
+        if (relative > 180) {
+            relative -= 360;
+        }
+
+        $("direction-arrow").style.transform =
+            "rotate(" + relative + "deg)";
+    }
+
+    const distance = haversine(
+        userLat,
+        userLng,
+        step.lat,
+        step.lng
+    );
+
+    $("direction-distance").textContent =
+        formatDistance(distance) +
+        " to next point";
+}
+
+/* REMAINING DISTANCE */
+
+function updateRemainingDistance() {
+
+    if (!routeSteps.length) return;
+
+    if (currentStep >= routeSteps.length) {
+
+        $("distance-left").textContent = "0 m";
+        $("eta").textContent = "0 min";
+
+        return;
+    }
+
+    const step = routeSteps[currentStep];
 
     let remaining = haversine(
         userLat,
@@ -1178,97 +1260,25 @@ function updateRemainingDistance() {
     );
 
     for (
-        let i = currentStepIndex + 1;
+        let i = currentStep + 1;
         i < routeSteps.length;
         i++
     ) {
-        remaining += routeSteps[i].distMeters;
+        remaining += routeSteps[i].distance;
     }
 
-    el('dist-left').textContent = formatDist(remaining);
+    $("distance-left").textContent =
+        formatDistance(remaining);
 
-    const estimatedMinutes = Math.ceil(
+    const minutes = Math.ceil(
         remaining / 1.3 / 60
     );
 
-    el('eta-val').textContent =
-        estimatedMinutes + ' min';
-}
-
-/* DIRECTION ARROW */
-function updateDirectionToNextStep() {
-
-    if (!navigating) return;
-    if (currentStepIndex >= routeSteps.length) return;
-
-    const step = routeSteps[currentStepIndex];
-
-    const bearing = computeBearing(
-        userLat,
-        userLng,
-        step.lat,
-        step.lng
-    );
-
-    if (headingAvailable) {
-
-        let relativeBearing =
-            (bearing - deviceHeading + 360) % 360;
-
-        if (relativeBearing > 180) {
-            relativeBearing -= 360;
-        }
-
-        el('dir-arrow-svg').style.transform =
-            'rotate(' + relativeBearing + 'deg)';
-
-    }
-
-    const distance = haversine(
-        userLat,
-        userLng,
-        step.lat,
-        step.lng
-    );
-
-    el('dir-dist').textContent =
-        formatDist(distance) + ' to next point';
-}
-
-/* INSTRUCTION PANEL */
-function updateDirectionPanel(step) {
-
-    el('dir-text').textContent = step.instruction;
-    el('dir-dist').textContent = step.distText;
-
-    const isTurn = /turn|left|right|merge|ramp/i.test(
-        step.maneuver + ' ' + step.instruction
-    );
-
-    el('dir-arrow-poly').setAttribute(
-        'fill',
-        isTurn ? '#ff6a00' : '#00ffe7'
-    );
-}
-
-/* HIGHLIGHT ROUTE STEP */
-function highlightStep(index) {
-
-    document.querySelectorAll('.step-item').forEach(
-        function(item) {
-            item.classList.remove('active');
-        }
-    );
-
-    const item = el('step-' + index);
-
-    if (item) {
-        item.classList.add('active');
-    }
+    $("eta").textContent =
+        minutes + " min";
 }
 
 /* COMPASS */
-let compassInitialized = false;
 
 function setupCompass() {
 
@@ -1276,37 +1286,41 @@ function setupCompass() {
 
     compassInitialized = true;
 
-    if ('ondeviceorientationabsolute' in window) {
+    if ("ondeviceorientationabsolute" in window) {
 
         window.addEventListener(
-            'deviceorientationabsolute',
-            onOrientation,
+            "deviceorientationabsolute",
+            updateCompass,
             true
         );
 
     } else {
 
         window.addEventListener(
-            'deviceorientation',
-            onOrientation,
+            "deviceorientation",
+            updateCompass,
             true
         );
-
     }
 }
 
-/* ORIENTATION */
-function onOrientation(event) {
+function updateCompass(event) {
 
     let heading = null;
 
-    if (typeof event.webkitCompassHeading === 'number') {
+    if (
+        typeof event.webkitCompassHeading === "number"
+    ) {
 
         heading = event.webkitCompassHeading;
 
-    } else if (event.alpha !== null) {
+    } else if (
+        event.absolute === true &&
+        event.alpha !== null
+    ) {
 
-        heading = (360 - event.alpha + 360) % 360;
+        heading =
+            (360 - event.alpha + 360) % 360;
 
     }
 
@@ -1315,199 +1329,90 @@ function onOrientation(event) {
     deviceHeading = heading;
     headingAvailable = true;
 
-    el('heading-val').textContent =
-        Math.round(heading) + '°';
+    $("heading-value").textContent =
+        Math.round(heading) + "°";
 
-    el('compass-needle').style.transform =
-        'rotate(' + (-heading) + 'deg)';
+    $("compass-needle").style.transform =
+        "rotate(" + (-heading) + "deg)";
 
-    updateDirectionToNextStep();
+    updateDirection();
 }
 
 /* VOICE */
-let toastTimer = null;
 
-function speakInstruction(text) {
+function speak(text) {
 
-    const toast = el('voice-toast');
+    const toast = $("voice-toast");
 
-    el('voice-text').textContent = text;
+    toast.textContent = "🔊 " + text;
+    toast.style.display = "block";
 
-    toast.classList.add('show');
+    clearTimeout(toastTimeout);
 
-    clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(function() {
-        toast.classList.remove('show');
+    toastTimeout = setTimeout(function() {
+        toast.style.display = "none";
     }, 4500);
 
-    if (
-        !('speechSynthesis' in window) ||
-        !('SpeechSynthesisUtterance' in window)
-    ) {
-        return;
-    }
+    if (!("speechSynthesis" in window)) return;
 
     try {
 
-        window.speechSynthesis.cancel();
+        speechSynthesis.cancel();
 
         const utterance =
             new SpeechSynthesisUtterance(text);
 
-        utterance.lang = 'en-IN';
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
+        utterance.lang = "en-IN";
+        utterance.rate = 1;
+        utterance.pitch = 1;
 
-        window.speechSynthesis.speak(utterance);
+        speechSynthesis.speak(utterance);
 
     } catch (error) {
 
         console.warn("Voice error:", error);
-
     }
 }
 
-/* DISTANCE */
-function haversine(lat1, lon1, lat2, lon2) {
+/* ROUTE STEPS TOGGLE */
 
-    const R = 6371000;
-
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) ** 2;
-
-    return R * 2 * Math.atan2(
-        Math.sqrt(a),
-        Math.sqrt(1 - a)
-    );
-}
-
-/* BEARING */
-function computeBearing(lat1, lon1, lat2, lon2) {
-
-    const dLon = toRad(lon2 - lon1);
-
-    const y =
-        Math.sin(dLon) * Math.cos(toRad(lat2));
-
-    const x =
-        Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-        Math.sin(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.cos(dLon);
-
-    return (
-        toDeg(Math.atan2(y, x)) + 360
-    ) % 360;
-}
-
-function toRad(value) {
-    return value * Math.PI / 180;
-}
-
-function toDeg(value) {
-    return value * 180 / Math.PI;
-}
-
-function formatDist(distance) {
-
-    return distance >= 1000
-        ? (distance / 1000).toFixed(1) + ' km'
-        : Math.round(distance) + ' m';
-}
-
-/* REMOVE HTML FROM DIRECTIONS */
-function stripHTML(html) {
-
-    const container = document.createElement('div');
-    container.innerHTML = html;
-
-    return container.textContent || '';
-}
-
-/* TOGGLE ROUTE STEPS */
 function toggleSteps() {
 
-    el('steps-scroll').classList.toggle('open');
+    const container = $("steps-container");
 
+    container.style.display =
+        container.style.display === "block"
+        ? "none"
+        : "block";
 }
 
-/* DARK MAP */
-function darkMapStyle() {
+/* BACK TO HOME */
 
-    return [
+function goHome() {
 
-        {
-            elementType: 'geometry',
-            stylers: [{ color: '#0d1117' }]
-        },
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+    }
 
-        {
-            elementType: 'labels.text.stroke',
-            stylers: [{ color: '#0d1117' }]
-        },
+    if ("speechSynthesis" in window) {
+        speechSynthesis.cancel();
+    }
 
-        {
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#8ec3b9' }]
-        },
-
-        {
-            featureType: 'road',
-            elementType: 'geometry',
-            stylers: [{ color: '#1a2332' }]
-        },
-
-        {
-            featureType: 'road.highway',
-            elementType: 'geometry',
-            stylers: [{ color: '#2c3e50' }]
-        },
-
-        {
-            featureType: 'water',
-            elementType: 'geometry',
-            stylers: [{ color: '#0a1628' }]
-        },
-
-        {
-            featureType: 'poi',
-            stylers: [{ visibility: 'off' }]
-        },
-
-        {
-            featureType: 'transit',
-            stylers: [{ visibility: 'off' }]
-        },
-
-        {
-            featureType: 'administrative.locality',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#00ffe7' }]
-        }
-
-    ];
+    window.location.href = "home.html";
 }
 
 /* CLEANUP */
-window.addEventListener('pagehide', function() {
+
+window.addEventListener("pagehide", function() {
 
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
     }
 
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+    if ("speechSynthesis" in window) {
+        speechSynthesis.cancel();
     }
-
 });
 
 </script>
