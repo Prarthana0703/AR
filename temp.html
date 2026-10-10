@@ -3,134 +3,151 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+
 <title>Premium AR Wedding Invitation 💍</title>
 
-<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+<!-- AR LIBRARIES -->
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/aframe/build/aframe-ar.js"></script>
 <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
 <style>
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
 html, body {
     margin: 0;
+    padding: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #000;
+    background: transparent;
     color: white;
     font-family: Georgia, serif;
 }
 
-button, input { font: inherit; }
-button { cursor: pointer; }
-
-a-scene {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+/* AR SCENE */
+#ar-scene {
+    background: transparent !important;
 }
 
 .a-canvas {
     background: transparent !important;
 }
 
-/* STATUS */
+/* AR.JS CAMERA */
+video.arjs-camera-feed,
+#arjs-video {
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* UI BUTTONS */
+button {
+    cursor: pointer;
+    border: none;
+}
+
+.btn {
+    background: rgba(30,0,38,.94);
+    color: white;
+    border: 1px solid #ffd700;
+    padding: 11px 13px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    min-height: 43px;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg,#ff69b4,#bb2560);
+    border-color: #ffb6c1;
+}
+
+.btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+/* STATUS BAR */
 #status-bar {
     position: fixed;
-    top: max(12px, env(safe-area-inset-top));
+    top: max(12px,env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1000;
+    z-index: 1200;
+    padding: 11px 16px;
+    max-width: 94vw;
     background: rgba(20,0,30,.9);
+    color: #ffd700;
     border: 1px solid #ffd700;
     border-radius: 12px;
-    padding: 11px 15px;
-    color: #ffd700;
-    font-size: 12px;
+    font: 12px Arial,sans-serif;
     text-align: center;
-    max-width: 94vw;
     pointer-events: none;
 }
 
 #status-dot {
     display: inline-block;
-    width: 9px;
     height: 9px;
-    border-radius: 50%;
+    width: 9px;
     background: orange;
+    border-radius: 50%;
     margin-right: 6px;
 }
 
 #status-dot.active {
     background: #00ff88;
-    box-shadow: 0 0 8px #00ff88;
 }
 
 /* CONTROLS */
 #controls {
     position: fixed;
-    bottom: max(12px, env(safe-area-inset-bottom));
     left: 50%;
+    bottom: max(12px,env(safe-area-inset-bottom));
     transform: translateX(-50%);
-    width: min(98vw, 500px);
+    width: min(98%,520px);
+    z-index: 1300;
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 7px;
-    z-index: 1100;
 }
 
-.btn {
-    padding: 11px 13px;
-    min-height: 44px;
-    border-radius: 11px;
-    border: 1px solid #ffd700;
-    background: rgba(25,0,35,.94);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.btn.primary {
-    background: linear-gradient(135deg,#ff69b4,#c0255a);
-    border-color: #ffb6c1;
-}
-
-.btn:disabled { opacity: .5; }
-
-/* POPUPS */
+/* POPUP WINDOWS */
 .popup {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1500;
-    width: min(94vw, 420px);
-    background: rgba(20,0,32,.97);
+    width: min(94vw,420px);
+    padding: 20px;
+    background: rgba(22,0,34,.97);
     border: 1px solid #ffd700;
     border-radius: 18px;
-    padding: 20px;
     color: white;
     text-align: center;
-    box-shadow: 0 12px 35px rgba(0,0,0,.7);
+    z-index: 1500;
     display: none;
+    box-shadow: 0 10px 35px rgba(0,0,0,.6);
 }
 
-.popup h2, .popup h3 {
+.popup h2,
+.popup h3 {
     color: #ffd700;
     margin-top: 0;
 }
 
 .popup p {
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.7;
 }
 
 #invite-box {
-    bottom: 95px;
+    bottom: 100px;
     max-height: 55vh;
     overflow-y: auto;
 }
@@ -138,114 +155,162 @@ a-scene {
 #ocr-panel {
     top: 50%;
     transform: translate(-50%,-50%);
+    z-index: 2000;
     max-height: 85vh;
     overflow-y: auto;
-    z-index: 2000;
 }
 
 #guest-input {
     width: 100%;
     padding: 12px;
-    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #ffb6c1;
     background: white;
     color: #222;
-    border: 1px solid #ffb6c1;
-    border-radius: 8px;
     font-size: 16px;
+    margin: 10px 0;
 }
 
 #ocr-result {
-    margin: 10px 0;
     color: #ffd700;
     font-size: 12px;
-    line-height: 1.5;
-    min-height: 20px;
+    margin: 10px 0;
+    line-height: 1.6;
 }
 
 #ocr-preview {
     display: none;
+    width: auto;
     max-width: 100%;
-    max-height: 160px;
-    object-fit: contain;
+    max-height: 140px;
+    margin: 8px auto;
     border: 1px solid #ffd700;
     border-radius: 8px;
-    margin: 10px auto;
 }
 
 #ocr-upload {
     width: 100%;
     margin: 10px 0;
-    color: white;
     font-size: 12px;
+    color: white;
+}
+
+#ocr-raw {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    text-align: left;
+    font: 11px monospace;
+    background: #170c22;
+    padding: 8px;
+    border-radius: 6px;
 }
 
 .ocr-actions {
     display: flex;
-    justify-content: center;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
 }
 
-#ocr-raw {
-    text-align: left;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    background: #160b22;
-    padding: 8px;
-    border-radius: 6px;
-    font: 11px monospace;
-}
-
-/* NOTIFICATIONS */
+/* TOAST */
 #toast {
     position: fixed;
     top: 80px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 2300;
+    z-index: 2400;
     width: min(92vw,370px);
     padding: 12px;
-    border-radius: 10px;
     background: rgba(0,0,0,.92);
-    color: white;
-    font-size: 12px;
+    border-radius: 10px;
     text-align: center;
+    font: 12px Arial,sans-serif;
     display: none;
     pointer-events: none;
 }
 
-/* METRICS */
+/* RESEARCH METRICS */
 #metrics {
     position: fixed;
-    top: 115px;
-    left: 12px;
-    z-index: 1050;
-    background: rgba(0,0,0,.85);
+    top: 110px;
+    left: 10px;
+    z-index: 1150;
+    padding: 12px;
+    background: rgba(0,0,0,.84);
     border: 1px solid #ffd700;
     border-radius: 10px;
-    padding: 12px;
     font: 11px/1.8 monospace;
     display: none;
 }
 
-#metrics.visible { display: block; }
+#metrics.visible {
+    display: block;
+}
+
+/* LOADING */
+#loading {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    background: rgba(15,0,25,.94);
+    color: #ffd700;
+    text-align: center;
+    font: 14px Arial,sans-serif;
+    padding: 20px;
+    pointer-events: none;
+}
+
+#loading.hidden {
+    display: none;
+}
+
+.loader {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,215,0,.2);
+    border-top-color: #ffd700;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 
 @media(max-width:420px) {
     .btn {
         padding: 9px;
         font-size: 11px;
     }
-    #invite-box { bottom: 120px; }
+
+    #invite-box {
+        bottom: 125px;
+    }
 }
 </style>
 </head>
 
 <body>
 
+<!-- LOADING -->
+<div id="loading">
+    <div class="loader"></div>
+    <div id="loading-text">
+        Initializing AR Wedding Experience...
+    </div>
+</div>
+
 <!-- STATUS -->
 <div id="status-bar">
     <span id="status-dot"></span>
-    <span id="status-text">Initializing AR camera...</span>
+    <span id="status-text">
+        Initializing AR camera...
+    </span>
 </div>
 
 <!-- INVITATION -->
@@ -257,10 +322,12 @@ a-scene {
             You are warmly invited to celebrate
             the wedding of <b>Rahul &amp; Saira</b>.
         </p>
+
         <p>
             Your presence will make this occasion
             truly special.
         </p>
+
         <p>Please come and bless us ❤️</p>
     </div>
 
@@ -274,24 +341,21 @@ a-scene {
     <h3>💌 Personalized Invitation</h3>
 
     <p>
-        Point your camera towards a printed guest card
-        containing <b>Guest: Ananya</b>.
-        You can also upload a photo.
+        Point the camera at a guest card with
+        <b>Guest: Ananya</b>, or upload a photo.
     </p>
 
     <input
         id="guest-input"
         type="text"
         maxlength="40"
-        placeholder="Detected guest name">
+        placeholder="Guest name">
 
     <div id="ocr-result" role="status"></div>
 
-    <img id="ocr-preview" alt="OCR scan preview">
+    <img id="ocr-preview" alt="Scanned image preview">
 
-    <label for="ocr-upload">
-        Upload invitation photo (optional)
-    </label>
+    <label for="ocr-upload">Upload photo (optional)</label>
 
     <input
         id="ocr-upload"
@@ -299,12 +363,12 @@ a-scene {
         accept="image/*">
 
     <details style="margin:10px 0">
-        <summary>View recognized text</summary>
+        <summary>Recognized text</summary>
         <pre id="ocr-raw"></pre>
     </details>
 
     <div class="ocr-actions">
-        <button id="scan-btn" class="btn" onclick="scanGuest()">
+        <button class="btn" id="scan-btn" onclick="scanGuest()">
             📷 Scan
         </button>
 
@@ -333,7 +397,7 @@ a-scene {
     <div>OCR time: <span id="m-ocr-time">--</span></div>
 </div>
 
-<!-- BUTTONS -->
+<!-- CONTROLS -->
 <div id="controls">
     <button class="btn primary" onclick="toggleInvitation()">
         💌 Invitation
@@ -356,30 +420,45 @@ a-scene {
     </button>
 </div>
 
-<audio id="wedding-audio" src="wedding-music.mp3" loop preload="none"></audio>
+<!-- AUDIO -->
+<audio
+    id="wedding-audio"
+    src="wedding-music.mp3"
+    preload="none"
+    loop>
+</audio>
 
-<!-- AR SCENE: ONE CAMERA OWNED BY AR.JS -->
+<!-- AR SCENE -->
 <a-scene
     id="ar-scene"
     embedded
     arjs="sourceType: webcam; debugUIEnabled: false;"
-    renderer="alpha: true; antialias: true; colorManagement: true"
+    renderer="alpha: true; antialias: true;"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
-    <a-assets timeout="20000">
-        <img id="bg" src="Background.png" crossorigin="anonymous">
-        <img id="board" src="board.png" crossorigin="anonymous">
-        <img id="floor-img" src="texture.jpg" crossorigin="anonymous">
-        <img id="wood-img" src="wood.jpg" crossorigin="anonymous">
-        <img id="petal-img" src="rose_petal.png" crossorigin="anonymous">
+    <!-- ASSETS -->
+    <a-assets timeout="15000">
+        <img id="bg" src="Background.png">
+        <img id="board" src="board.png">
+        <img id="floor-img" src="texture.jpg">
+        <img id="wood-img" src="wood.jpg">
+        <img id="petal-img" src="rose_petal.png">
 
-        <a-asset-item id="gate-model" src="wedding_gate-v1.glb"></a-asset-item>
-        <a-asset-item id="couple-model" src="couple.glb"></a-asset-item>
+        <a-asset-item
+            id="gate-model"
+            src="wedding_gate-v1.glb">
+        </a-asset-item>
+
+        <a-asset-item
+            id="couple-model"
+            src="couple.glb">
+        </a-asset-item>
     </a-assets>
 
-    <!-- LIGHTING -->
+    <!-- LIGHTS -->
     <a-light type="ambient" intensity="1.2"></a-light>
+
     <a-light
         type="directional"
         position="1 4 2"
@@ -391,10 +470,7 @@ a-scene {
         id="hiro-marker"
         preset="hiro"
         emitevents="true"
-        smooth="true"
-        smoothCount="5"
-        smoothTolerance="0.01"
-        smoothThreshold="2">
+        smooth="true">
 
         <!-- WEDDING BACKGROUND -->
         <a-entity
@@ -420,7 +496,7 @@ a-scene {
                       roughness: 0.8">
         </a-circle>
 
-        <!-- WOODEN BORDER -->
+        <!-- FLOOR RING -->
         <a-ring
             radius-inner="0.95"
             radius-outer="1.05"
@@ -439,17 +515,18 @@ a-scene {
             scale="1.5 1.5 1.5">
         </a-entity>
 
-        <!-- COUPLE -->
+        <!-- COUPLE MODEL -->
         <a-entity
             id="wedding-couple"
             gltf-model="#couple-model"
             position="0 1 0.2"
             scale="0.75 0.75 0.75"
             animation="property: rotation;
+                       from: 0 0 0;
                        to: 0 360 0;
                        dur: 20000;
-                       loop: true;
-                       easing: linear">
+                       easing: linear;
+                       loop: true">
         </a-entity>
 
         <!-- TITLE -->
@@ -460,6 +537,7 @@ a-scene {
                 color="#FFD700"
                 width="5"
                 animation="property: scale;
+                           from: 1 1 1;
                            to: 1.08 1.08 1.08;
                            dir: alternate;
                            dur: 1400;
@@ -480,8 +558,8 @@ a-scene {
             look-at="[camera]">
         </a-plane>
 
-        <!-- ROSE PETALS -->
-        <a-entity id="petal-container">
+        <!-- ANIMATED PETALS -->
+        <a-entity id="petals">
 
             <a-plane
                 src="#petal-img"
@@ -583,7 +661,7 @@ a-scene {
 
         </a-entity>
 
-        <!-- PERSONALISED NAME -->
+        <!-- PERSONALIZED NAME -->
         <a-text
             id="detected-name"
             value=""
@@ -594,6 +672,7 @@ a-scene {
             look-at="[camera]">
         </a-text>
 
+        <!-- PERSONALIZED MESSAGE -->
         <a-text
             id="personal-message"
             value="Welcome to our wedding!"
@@ -613,6 +692,7 @@ a-scene {
 <script>
 "use strict";
 
+/* UTILITIES */
 const $ = id => document.getElementById(id);
 
 const state = {
@@ -634,7 +714,7 @@ const state = {
 
 let toastTimer = null;
 
-/* TOAST */
+/* NOTIFICATIONS */
 function notify(message, duration = 3500) {
     $("toast").textContent = message;
     $("toast").style.display = "block";
@@ -647,34 +727,116 @@ function notify(message, duration = 3500) {
 }
 
 /* STATUS */
-function setStatus(text, active = false) {
-    $("status-text").textContent = text;
+function setStatus(message, active = false) {
+    $("status-text").textContent = message;
     $("status-dot").classList.toggle("active", active);
 }
 
-/* CAMERA STATUS */
-function cameraVideo() {
-    return [...document.querySelectorAll("video")].find(v =>
-        v.readyState >= 2 &&
-        v.videoWidth > 0 &&
-        v.videoHeight > 0 &&
-        !v.paused
+/* LOADING */
+function hideLoading() {
+    $("loading").classList.add("hidden");
+}
+
+/*
+  CAMERA FIX
+
+  AR.js owns the only camera stream.
+
+  The browser video is placed behind
+  the transparent A-Frame canvas.
+*/
+
+function getARVideo() {
+    const videos = [
+        ...document.querySelectorAll("video")
+    ];
+
+    return videos.find(video =>
+        video.id === "arjs-video"
+    ) || videos.find(video =>
+        video.videoWidth > 0 &&
+        video.videoHeight > 0
     ) || null;
 }
 
-function checkCamera() {
-    if (cameraVideo()) {
+function fixCameraBackground() {
+    const video = getARVideo();
+
+    if (!video) {
+        return false;
+    }
+
+    video.classList.add("arjs-camera-feed");
+
+    /*
+      AR.js controls the camera source,
+      dimensions and positioning.
+      Do not create another stream.
+    */
+
+    video.style.visibility = "visible";
+    video.style.display = "block";
+
+    const canvas = document.querySelector(
+        "#ar-scene canvas"
+    );
+
+    if (canvas) {
+        canvas.style.background = "transparent";
+    }
+
+    const scene = $("ar-scene");
+
+    scene.style.background = "transparent";
+
+    if (
+        video.readyState >= 2 &&
+        video.videoWidth > 0 &&
+        video.videoHeight > 0
+    ) {
+        hideLoading();
+
         $("m-camera").textContent = "ON";
+
         if (!state.markerVisible) {
             setStatus("Camera ready — scan Hiro marker");
         }
-        return;
+
+        return true;
     }
 
-    $("m-camera").textContent = "WAITING";
+    return false;
 }
 
-/* MARKER EVENTS */
+/* CAMERA WATCH */
+function monitorCamera() {
+    let attempts = 0;
+
+    const timer = setInterval(() => {
+        attempts++;
+
+        const ready = fixCameraBackground();
+
+        if (ready) {
+            clearInterval(timer);
+            return;
+        }
+
+        if (attempts >= 30) {
+            clearInterval(timer);
+            hideLoading();
+
+            setStatus("Camera unavailable");
+
+            notify(
+                "Camera not ready. Check HTTPS, permissions and browser.",
+                7000
+            );
+        }
+    }, 500);
+}
+
+/* MARKER */
 function setupMarker() {
     const marker = $("hiro-marker");
 
@@ -685,27 +847,36 @@ function setupMarker() {
         state.detections++;
 
         const now = performance.now();
+
         state.visibleSince = now;
 
         if (state.firstDetection === null) {
-            state.firstDetection = now - state.startTime;
+            state.firstDetection =
+                now - state.startTime;
         }
 
-        setStatus("Hiro marker detected — AR active", true);
+        setStatus(
+            "Hiro marker detected — AR active",
+            true
+        );
+
         updateMetrics();
     });
 
     marker.addEventListener("markerLost", () => {
         if (!state.markerVisible) return;
 
+        const now = performance.now();
+
         state.visibleMs +=
-            performance.now() - state.visibleSince;
+            now - state.visibleSince;
 
         state.visibleSince = null;
         state.markerVisible = false;
         state.losses++;
 
         setStatus("Marker lost — scan Hiro marker");
+
         updateMetrics();
     });
 }
@@ -714,12 +885,12 @@ function setupMarker() {
 function setupModels() {
     ["wedding-gate", "wedding-couple"].forEach(id => {
         $(id).addEventListener("model-loaded", () => {
-            console.log(id + " loaded");
+            console.log(id + " loaded successfully");
         });
 
         $(id).addEventListener("model-error", event => {
-            console.error(id, event.detail);
-            notify("Could not load " + id);
+            console.error("Model error:", id, event.detail);
+            notify("3D model failed: " + id);
         });
     });
 }
@@ -727,22 +898,31 @@ function setupModels() {
 /* INVITATION */
 function toggleInvitation() {
     const box = $("invite-box");
+
     box.style.display =
-        box.style.display === "block" ? "none" : "block";
+        box.style.display === "block"
+            ? "none"
+            : "block";
 }
 
-/* VOICE */
+/* SPEECH */
 function speak(text) {
-    if (!state.voiceEnabled ||
-        !("speechSynthesis" in window)) return;
+    if (!state.voiceEnabled) return;
+
+    if (!("speechSynthesis" in window)) {
+        notify("Voice unsupported.");
+        return;
+    }
 
     speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-IN";
-    utterance.rate = 0.95;
+    const speech = new SpeechSynthesisUtterance(text);
 
-    speechSynthesis.speak(utterance);
+    speech.lang = "en-IN";
+    speech.rate = 0.95;
+    speech.pitch = 1.05;
+
+    speechSynthesis.speak(speech);
 }
 
 function toggleVoice() {
@@ -754,7 +934,9 @@ function toggleVoice() {
     }
 
     $("voice-btn").textContent =
-        state.voiceEnabled ? "🔊 Voice" : "🔇 Voice";
+        state.voiceEnabled
+            ? "🔊 Voice"
+            : "🔇 Voice";
 }
 
 /* MUSIC */
@@ -771,7 +953,7 @@ async function toggleMusic() {
         await audio.play();
         $("music-btn").textContent = "🎵 Music";
     } catch (error) {
-        notify("Check wedding-music.mp3.");
+        notify("Music unavailable. Check wedding-music.mp3.");
     }
 }
 
@@ -782,30 +964,42 @@ function openOCR() {
 }
 
 function closeOCR() {
-    if (state.processing) return;
+    if (state.processing) {
+        notify("Recognition is still running.");
+        return;
+    }
+
     $("ocr-panel").style.display = "none";
 }
 
-/* TESSERACT OCR WORKER */
+/* OCR WORKER */
 async function getWorker() {
     if (state.worker) return state.worker;
-    if (state.workerPromise) return state.workerPromise;
+
+    if (state.workerPromise) {
+        return state.workerPromise;
+    }
 
     if (!window.Tesseract) {
-        throw new Error("OCR library failed to load.");
+        throw new Error("Tesseract.js unavailable.");
     }
 
     state.workerPromise = (async () => {
         const worker = Tesseract.createWorker({
             logger: message => {
-                if (state.processing && message.status) {
-                    const percent =
+                if (
+                    state.processing &&
+                    message.status
+                ) {
+                    const progress =
                         typeof message.progress === "number"
-                        ? " " + Math.round(message.progress * 100) + "%"
+                        ? " " +
+                          Math.round(message.progress * 100) +
+                          "%"
                         : "";
 
                     $("ocr-result").textContent =
-                        message.status + percent;
+                        message.status + progress;
                 }
             }
         });
@@ -815,11 +1009,11 @@ async function getWorker() {
         await worker.initialize("eng");
 
         await worker.setParameters({
-            tessedit_pageseg_mode: "6",
-            preserve_interword_spaces: "1"
+            tessedit_pageseg_mode: "6"
         });
 
         state.worker = worker;
+
         return worker;
     })();
 
@@ -831,41 +1025,55 @@ async function getWorker() {
     }
 }
 
-/* CAMERA IMAGE CAPTURE */
+/* CAPTURE CAMERA IMAGE */
 function captureFrame() {
-    const video = cameraVideo();
+    const video = getARVideo();
 
-    if (!video) {
+    if (
+        !video ||
+        video.readyState < 2 ||
+        !video.videoWidth
+    ) {
         throw new Error(
-            "Camera not ready. Allow access and reload the page."
+            "AR camera video unavailable. Try uploading a photo."
         );
     }
 
-    const scale = Math.min(1, 1280 / video.videoWidth);
+    const scale = Math.min(
+        1,
+        1280 / video.videoWidth
+    );
 
     const canvas = document.createElement("canvas");
 
-    canvas.width = Math.round(video.videoWidth * scale);
-    canvas.height = Math.round(video.videoHeight * scale);
+    canvas.width =
+        Math.round(video.videoWidth * scale);
+
+    canvas.height =
+        Math.round(video.videoHeight * scale);
 
     const ctx = canvas.getContext("2d", {
         willReadFrequently: true
     });
 
-    if (!ctx) throw new Error("Canvas unavailable");
+    if (!ctx) {
+        throw new Error("Canvas not available.");
+    }
 
     ctx.drawImage(
         video,
-        0, 0,
-        canvas.width, canvas.height
+        0,
+        0,
+        canvas.width,
+        canvas.height
     );
 
     return canvas;
 }
 
-/* CLEAN GUEST NAME */
-function sanitizeName(value) {
-    return String(value || "")
+/* VALIDATE NAME */
+function sanitizeName(name) {
+    return String(name || "")
         .replace(/[^A-Za-z\s'-]/g, " ")
         .replace(/\s+/g, " ")
         .trim()
@@ -883,15 +1091,16 @@ function extractName(text) {
         const line = lines[i];
 
         const match = line.match(
-            /\b(?:guest(?:\s+name)?|name|dear|to)\s*[:\-.,]?\s*([A-Za-z][A-Za-z '-]{1,39})/i
+            /\b(?:guest(?:\s+name)?|name|dear|to)\s*[:\-.,]?\s+([A-Za-z][A-Za-z '-]{1,39})/i
         );
 
         if (match) {
-            const name = sanitizeName(match[1])
-                .replace(
-                    /\b(?:welcome|wedding|invitation|rahul|saira|you|are|invited)\b.*$/i,
-                    ""
-                ).trim();
+            let name = sanitizeName(match[1]);
+
+            name = name.replace(
+                /\b(?:welcome|invitation|wedding|you|are|invited)\b.*$/i,
+                ""
+            ).trim();
 
             if (name.length >= 2) {
                 return name;
@@ -899,99 +1108,117 @@ function extractName(text) {
         }
 
         if (
-            /\b(?:guest|name|dear|to)\s*[:\-.]?\s*$/i.test(line)
+            /^(?:guest|name|dear|to)\s*[:\-.]?\s*$/i.test(line)
             && lines[i + 1]
         ) {
             const name = sanitizeName(lines[i + 1]);
 
-            if (name.length >= 2) return name;
+            if (name.length >= 2) {
+                return name;
+            }
         }
     }
 
     return "";
 }
 
-/* OCR SCAN */
+/* SCAN GUEST */
 async function scanGuest() {
     if (state.processing) return;
 
     state.processing = true;
     state.ocrAttempts++;
 
-    $("scan-btn").disabled = true;
-    $("scan-btn").textContent = "Scanning...";
-    $("ocr-result").textContent = "Preparing image...";
+    const button = $("scan-btn");
+
+    button.disabled = true;
+    button.textContent = "Scanning...";
+
+    $("ocr-result").textContent =
+        "Preparing image...";
+
     $("ocr-raw").textContent = "";
 
-    const started = performance.now();
+    const start = performance.now();
 
     try {
         const file = $("ocr-upload").files[0];
 
         const image = file || captureFrame();
 
-        /* PREVIEW */
         const preview = $("ocr-preview");
 
         if (file) {
             const url = URL.createObjectURL(file);
-            preview.onload = () => URL.revokeObjectURL(url);
+
+            preview.onload = () => {
+                URL.revokeObjectURL(url);
+            };
+
             preview.src = url;
         } else {
-            preview.src = image.toDataURL("image/jpeg", 0.9);
+            preview.src = image.toDataURL(
+                "image/jpeg",
+                0.9
+            );
         }
 
         preview.style.display = "block";
 
-        /* RECOGNITION */
         const worker = await getWorker();
 
         const result = await worker.recognize(image);
 
-        const text = result.data?.text || "";
+        const recognizedText =
+            result.data?.text || "";
+
         const confidence = Number(
             result.data?.confidence || 0
         );
 
-        state.lastOCRMs = performance.now() - started;
+        state.lastOCRMs =
+            performance.now() - start;
 
         $("ocr-raw").textContent =
-            text || "[No text detected]";
+            recognizedText || "[No text detected]";
 
-        const name = extractName(text);
+        const name = extractName(recognizedText);
 
         if (name) {
             $("guest-input").value = name;
 
             $("ocr-result").textContent =
                 "Suggested name: " + name +
-                " | Overall OCR confidence: " +
+                " | OCR confidence: " +
                 confidence.toFixed(0) +
-                "%. Please verify and confirm.";
+                "%. Please verify.";
         } else {
             $("ocr-result").textContent =
-                text.trim()
-                    ? "Text recognized, but no guest name found. Check recognized text or enter manually."
-                    : "No readable text found. Try better lighting or upload a clear photo.";
+                recognizedText.trim()
+                    ? "Text found, but guest name not identified. Check recognized text."
+                    : "No readable text found. Try a clearer image.";
         }
 
     } catch (error) {
         console.error("OCR error:", error);
 
         $("ocr-result").textContent =
-            "OCR failed: " + (error.message || String(error));
+            "OCR error: " +
+            (error.message || String(error));
     } finally {
         state.processing = false;
-        $("scan-btn").disabled = false;
-        $("scan-btn").textContent = "📷 Scan";
+        button.disabled = false;
+        button.textContent = "📷 Scan";
 
         updateMetrics();
     }
 }
 
-/* CONFIRM NAME */
+/* CONFIRM GUEST */
 function confirmGuest() {
-    const name = sanitizeName($("guest-input").value);
+    const name = sanitizeName(
+        $("guest-input").value
+    );
 
     if (name.length < 2) {
         notify("Enter a valid guest name.");
@@ -1005,11 +1232,13 @@ function confirmGuest() {
 
     $("personal-message").setAttribute(
         "value",
-        "Dear " + name + ", welcome to our wedding!"
+        "Dear " + name +
+        ", welcome to our wedding!"
     );
 
-    const container = $("invite-message");
-    container.replaceChildren();
+    const box = $("invite-message");
+
+    box.replaceChildren();
 
     const greeting = document.createElement("p");
     greeting.textContent = "Dear " + name + ",";
@@ -1019,9 +1248,10 @@ function confirmGuest() {
         "You are warmly invited to celebrate the wedding of Rahul and Saira.";
 
     const closing = document.createElement("p");
-    closing.textContent = "Please come and bless us ❤️";
+    closing.textContent =
+        "Please come and bless us ❤️";
 
-    container.append(greeting, message, closing);
+    box.append(greeting, message, closing);
 
     $("ocr-panel").style.display = "none";
     $("invite-box").style.display = "block";
@@ -1034,27 +1264,40 @@ function confirmGuest() {
     notify("Invitation personalized for " + name);
 }
 
-/* RESEARCH METRICS */
-function visibleTime() {
+/* MARKER VISIBLE TIME */
+function getVisibleTime() {
     let total = state.visibleMs;
 
-    if (state.markerVisible &&
-        state.visibleSince !== null) {
-        total += performance.now() - state.visibleSince;
+    if (
+        state.markerVisible &&
+        state.visibleSince !== null
+    ) {
+        total +=
+            performance.now() - state.visibleSince;
     }
 
     return total;
 }
 
+/* METRICS */
 function updateMetrics() {
-    $("m-camera").textContent =
-        cameraVideo() ? "ON" : "WAITING";
+    const video = getARVideo();
 
-    $("m-detect").textContent = state.detections;
-    $("m-loss").textContent = state.losses;
+    $("m-camera").textContent =
+        video &&
+        video.readyState >= 2 &&
+        video.videoWidth > 0
+            ? "ON"
+            : "WAITING";
+
+    $("m-detect").textContent =
+        state.detections;
+
+    $("m-loss").textContent =
+        state.losses;
 
     $("m-visible").textContent =
-        (visibleTime() / 1000).toFixed(1);
+        (getVisibleTime() / 1000).toFixed(1);
 
     $("m-first").textContent =
         state.firstDetection === null
@@ -1064,7 +1307,8 @@ function updateMetrics() {
     $("m-fps").textContent =
         state.fps ? state.fps.toFixed(1) : "--";
 
-    $("m-ocr").textContent = state.ocrAttempts;
+    $("m-ocr").textContent =
+        state.ocrAttempts;
 
     $("m-ocr-time").textContent =
         state.lastOCRMs === null
@@ -1077,20 +1321,27 @@ function toggleMetrics() {
     updateMetrics();
 }
 
-/* FRAME RATE */
+/* ANIMATION FPS */
 function startFPS() {
     let frames = 0;
     let last = performance.now();
+    let running = false;
 
     function frame(now) {
-        if (document.hidden) return;
+        if (document.hidden) {
+            running = false;
+            return;
+        }
 
         frames++;
 
         if (now - last >= 1000) {
-            state.fps = frames * 1000 / (now - last);
+            state.fps =
+                frames * 1000 / (now - last);
+
             frames = 0;
             last = now;
+
             updateMetrics();
         }
 
@@ -1098,37 +1349,77 @@ function startFPS() {
     }
 
     function resume() {
-        if (!document.hidden) {
+        if (!document.hidden && !running) {
+            running = true;
             frames = 0;
             last = performance.now();
             requestAnimationFrame(frame);
         }
     }
 
-    document.addEventListener("visibilitychange", resume);
+    document.addEventListener(
+        "visibilitychange",
+        resume
+    );
+
     resume();
 }
 
-/* INITIALIZATION */
+/* INITIALIZE */
 function initialize() {
     setupMarker();
     setupModels();
     startFPS();
 
-    window.addEventListener("camera-error", event => {
-        console.error("AR camera error:", event);
-        setStatus("Camera unavailable");
-        notify("Camera permission or initialization failed.");
-    });
+    if (!window.isSecureContext) {
+        hideLoading();
 
-    window.addEventListener("arjs-video-loaded", checkCamera);
+        setStatus("HTTPS required");
 
-    setTimeout(checkCamera, 3000);
+        notify(
+            "Camera requires HTTPS or localhost.",
+            7000
+        );
+
+        return;
+    }
+
+    window.addEventListener(
+        "arjs-video-loaded",
+        fixCameraBackground
+    );
+
+    window.addEventListener(
+        "camera-init",
+        fixCameraBackground
+    );
+
+    window.addEventListener(
+        "camera-error",
+        event => {
+            console.error("Camera error:", event);
+
+            hideLoading();
+
+            setStatus("Camera error");
+
+            notify(
+                "Unable to initialize camera. Check browser permissions.",
+                7000
+            );
+        }
+    );
+
+    monitorCamera();
+
     updateMetrics();
 }
 
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initialize);
+    document.addEventListener(
+        "DOMContentLoaded",
+        initialize
+    );
 } else {
     initialize();
 }
@@ -1146,6 +1437,7 @@ window.addEventListener("pagehide", () => {
         state.worker = null;
     }
 });
+
 </script>
 
 </body>
