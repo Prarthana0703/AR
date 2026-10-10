@@ -188,12 +188,7 @@ button {
     border-radius: 8px;
 }
 
-#ocr-upload {
-    width: 100%;
-    margin: 10px 0;
-    font-size: 12px;
-    color: white;
-}
+
 
 #ocr-raw {
     white-space: pre-wrap;
@@ -341,8 +336,8 @@ button {
     <h3>💌 Personalized Invitation</h3>
 
     <p>
-        Point the camera at a guest card with
-        <b>Guest: Ananya</b>, or upload a photo.
+        Point the live camera at a printed guest card marked
+        <b>Guest: Ananya</b>. Name recognition starts automatically.
     </p>
 
     <input
@@ -355,13 +350,6 @@ button {
 
     <img id="ocr-preview" alt="Scanned image preview">
 
-    <label for="ocr-upload">Upload photo (optional)</label>
-
-    <input
-        id="ocr-upload"
-        type="file"
-        accept="image/*">
-
     <details style="margin:10px 0">
         <summary>Recognized text</summary>
         <pre id="ocr-raw"></pre>
@@ -369,7 +357,7 @@ button {
 
     <div class="ocr-actions">
         <button class="btn" id="scan-btn" onclick="scanGuest()">
-            📷 Scan
+            📷 Scan Again
         </button>
 
         <button class="btn primary" onclick="confirmGuest()">
@@ -709,7 +697,9 @@ const state = {
     processing: false,
     worker: null,
     workerPromise: null,
-    voiceEnabled: true
+    voiceEnabled: true,
+    ocrPanelOpen: false,
+    ocrScanTimer: null
 };
 
 let toastTimer = null;
@@ -959,17 +949,24 @@ async function toggleMusic() {
 
 /* OCR PANEL */
 function openOCR() {
+    state.ocrPanelOpen = true;
     $("ocr-panel").style.display = "block";
-    $("ocr-result").textContent = "";
+    $("ocr-result").textContent =
+        "Scanning live camera for a guest name...";
+    scheduleLiveScan(250);
 }
 
 function closeOCR() {
-    if (state.processing) {
-        notify("Recognition is still running.");
-        return;
-    }
-
+    state.ocrPanelOpen = false;
+    clearTimeout(state.ocrScanTimer);
+    state.ocrScanTimer = null;
     $("ocr-panel").style.display = "none";
+}
+
+function scheduleLiveScan(delay = 1800) {
+    clearTimeout(state.ocrScanTimer);
+    if (!state.ocrPanelOpen) return;
+    state.ocrScanTimer = setTimeout(() => scanGuest(false), delay);
 }
 
 /* OCR WORKER */
@@ -1035,7 +1032,7 @@ function captureFrame() {
         !video.videoWidth
     ) {
         throw new Error(
-            "AR camera video unavailable. Try uploading a photo."
+            "Live AR camera unavailable. Check permissions and try again."
         );
     }
 
@@ -1122,95 +1119,67 @@ function extractName(text) {
     return "";
 }
 
-/* SCAN GUEST */
-async function scanGuest() {
-    if (state.processing) return;
+/* LIVE CAMERA OCR: NO UPLOADS, NO SECOND CAMERA STREAM */
+async function scanGuest(manual = true) {
+    if (!state.ocrPanelOpen || state.processing) return;
+
+    if (manual) {
+        clearTimeout(state.ocrScanTimer);
+        state.ocrScanTimer = null;
+    }
 
     state.processing = true;
     state.ocrAttempts++;
 
     const button = $("scan-btn");
-
     button.disabled = true;
     button.textContent = "Scanning...";
-
-    $("ocr-result").textContent =
-        "Preparing image...";
-
-    $("ocr-raw").textContent = "";
-
+    $("ocr-result").textContent = "Reading live camera frame...";
     const start = performance.now();
+    let foundName = false;
 
     try {
-        const file = $("ocr-upload").files[0];
-
-        const image = file || captureFrame();
-
+        // Capture only the AR.js camera video (not the UI or uploaded media).
+        const image = captureFrame();
         const preview = $("ocr-preview");
-
-        if (file) {
-            const url = URL.createObjectURL(file);
-
-            preview.onload = () => {
-                URL.revokeObjectURL(url);
-            };
-
-            preview.src = url;
-        } else {
-            preview.src = image.toDataURL(
-                "image/jpeg",
-                0.9
-            );
-        }
-
+        preview.src = image.toDataURL("image/jpeg", 0.9);
         preview.style.display = "block";
 
         const worker = await getWorker();
-
         const result = await worker.recognize(image);
+        const recognizedText = result.data?.text || "";
+        const confidence = Number(result.data?.confidence || 0);
+        state.lastOCRMs = performance.now() - start;
 
-        const recognizedText =
-            result.data?.text || "";
-
-        const confidence = Number(
-            result.data?.confidence || 0
-        );
-
-        state.lastOCRMs =
-            performance.now() - start;
-
-        $("ocr-raw").textContent =
-            recognizedText || "[No text detected]";
-
+        if (!state.ocrPanelOpen) return;
+        $("ocr-raw").textContent = recognizedText || "[No text detected]";
         const name = extractName(recognizedText);
 
         if (name) {
+            foundName = true;
             $("guest-input").value = name;
-
             $("ocr-result").textContent =
-                "Suggested name: " + name +
-                " | OCR confidence: " +
-                confidence.toFixed(0) +
-                "%. Please verify.";
+                "Detected from live camera: " + name +
+                " | OCR confidence: " + confidence.toFixed(0) +
+                "%. Verify the name and tap Confirm.";
         } else {
-            $("ocr-result").textContent =
-                recognizedText.trim()
-                    ? "Text found, but guest name not identified. Check recognized text."
-                    : "No readable text found. Try a clearer image.";
+            $("ocr-result").textContent = recognizedText.trim()
+                ? "Text detected, but no guest name found. Hold the card steady. Rescanning..."
+                : "No readable name yet. Move closer and improve lighting. Rescanning...";
         }
-
     } catch (error) {
-        console.error("OCR error:", error);
-
-        $("ocr-result").textContent =
-            "OCR error: " +
-            (error.message || String(error));
+        console.error("Live camera OCR error:", error);
+        if (state.ocrPanelOpen) {
+            $("ocr-result").textContent =
+                "Camera OCR: " + (error.message || String(error));
+        }
     } finally {
         state.processing = false;
         button.disabled = false;
-        button.textContent = "📷 Scan";
-
+        button.textContent = "📷 Scan Again";
         updateMetrics();
+        // Do not overlap OCR calls. Stop scanning when a candidate is found.
+        if (state.ocrPanelOpen && !foundName) scheduleLiveScan(1800);
     }
 }
 
@@ -1253,7 +1222,7 @@ function confirmGuest() {
 
     box.append(greeting, message, closing);
 
-    $("ocr-panel").style.display = "none";
+    closeOCR();
     $("invite-box").style.display = "block";
 
     speak(
@@ -1426,6 +1395,8 @@ if (document.readyState === "loading") {
 
 /* CLEANUP */
 window.addEventListener("pagehide", () => {
+    state.ocrPanelOpen = false;
+    clearTimeout(state.ocrScanTimer);
     $("wedding-audio").pause();
 
     if ("speechSynthesis" in window) {
