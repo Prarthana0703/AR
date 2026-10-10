@@ -1,85 +1,779 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AR Wedding Invitation ✨</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AR Wedding Event Schedule ✨</title>
+
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/aframe/build/aframe-ar.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+button { cursor: pointer; font: inherit; }
+
+#ar-scene, .a-canvas {
+    background: transparent !important;
+}
+
+#status {
+    position: fixed;
+    top: max(12px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+    width: max-content;
+    max-width: 94vw;
+    padding: 11px 15px;
+    border: 1px solid #ffd700;
+    border-radius: 12px;
+    background: rgba(20,0,30,.9);
+    color: #ffd700;
+    font-size: 12px;
+    text-align: center;
+    pointer-events: none;
+}
+
+#dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: orange;
+}
+
+#dot.active {
+    background: #00ff88;
+}
+
+#controls {
+    position: fixed;
+    bottom: max(15px, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1200;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    width: min(96%,480px);
+}
+
+.btn {
+    min-height: 44px;
+    padding: 11px 14px;
+    background: rgba(25,0,35,.94);
+    color: white;
+    border: 1px solid #ffd700;
+    border-radius: 11px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.btn.primary {
+    background: linear-gradient(135deg,#ff69b4,#b82c68);
+    border-color: #ffb6c1;
+}
+
+#schedule-panel {
+    position: fixed;
+    left: 50%;
+    bottom: 83px;
+    transform: translateX(-50%);
+    z-index: 1300;
+    display: none;
+    width: min(92vw,390px);
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 20px;
+    background: rgba(24,0,34,.96);
+    border: 1px solid #ffd700;
+    border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+
+#schedule-panel h2 {
+    margin: 0 0 15px;
+    color: #ffd700;
+    text-align: center;
+}
+
+.event {
+    padding: 12px 4px;
+    border-bottom: 1px solid rgba(255,215,0,.3);
+}
+
+.event:last-child { border-bottom: none; }
+
+.event-time {
+    color: #ffb6c1;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.event-name {
+    font-size: 14px;
+}
+
+#metrics {
+    position: fixed;
+    top: 100px;
+    left: 12px;
+    z-index: 1150;
+    display: none;
+    padding: 12px;
+    background: rgba(0,0,0,.82);
+    border: 1px solid #ffd700;
+    border-radius: 10px;
+    font: 11px/1.8 monospace;
+}
+
+#metrics.visible { display: block; }
+
+#toast {
+    position: fixed;
+    top: 75px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1800;
+    display: none;
+    width: min(92vw,360px);
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(0,0,0,.9);
+    font-size: 12px;
+    text-align: center;
+    pointer-events: none;
+}
+
+@media (max-width:420px) {
+    .btn {
+        padding: 9px 10px;
+        font-size: 11px;
+    }
+
+    #schedule-panel {
+        bottom: 110px;
+    }
+}
+</style>
 </head>
 
-<body style="margin: 0; overflow: hidden;">
+<body>
 
-<a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="colorManagement: true; antialias: true;">
+<!-- CAMERA / MARKER STATUS -->
+<div id="status" role="status">
+    <span id="dot"></span>
+    <span id="status-text">
+        Initializing AR camera...
+    </span>
+</div>
 
-    <a-assets>
+<!-- SCHEDULE POPUP -->
+<div id="schedule-panel">
+    <h2>💍 Wedding Schedule</h2>
+
+    <div class="event">
+        <div class="event-time">10:30 AM</div>
+        <div class="event-name">🌼 Haldi Ceremony</div>
+    </div>
+
+    <div class="event">
+        <div class="event-time">04:00 PM</div>
+        <div class="event-name">🥁 Baraat &amp; Swagat</div>
+    </div>
+
+    <div class="event">
+        <div class="event-time">06:30 PM</div>
+        <div class="event-name">💍 Shubh Vivah</div>
+    </div>
+
+    <div class="event">
+        <div class="event-time">08:30 PM</div>
+        <div class="event-name">🎶 Dinner &amp; Sangeet</div>
+    </div>
+
+    <button class="btn primary"
+            style="display:block;margin:16px auto 0"
+            onclick="toggleSchedule()">
+        Close
+    </button>
+</div>
+
+<!-- METRICS -->
+<div id="metrics">
+    <div>Camera: <span id="camera-state">WAITING</span></div>
+    <div>Marker detections: <span id="detections">0</span></div>
+    <div>Tracking losses: <span id="losses">0</span></div>
+    <div>Visible duration: <span id="visible-time">0.0</span>s</div>
+    <div>First detection: <span id="first-time">--</span></div>
+    <div>Animation FPS: <span id="fps">--</span></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- CONTROLS -->
+<div id="controls">
+    <button class="btn primary" onclick="toggleSchedule()">
+        📅 Event Schedule
+    </button>
+
+    <button class="btn" onclick="toggleMetrics()">
+        📊 Metrics
+    </button>
+</div>
+
+<!-- AR SCENE -->
+<a-scene
+    id="ar-scene"
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+    renderer="alpha: true; antialias: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <!-- ORIGINAL ASSETS -->
+    <a-assets timeout="15000">
+
         <img id="hallEnv" src="Back.png">
         <img id="archBoard" src="Display.png">
         <img id="wood" src="texture.jpg">
-        
+
         <img id="g_bride" src="Bride.png">
         <img id="g_barat" src="Barat.png">
         <img id="g_sanget" src="Sangeet.png">
-        
-        <a-mixin id="sparkle" geometry="primitive: sphere; radius: 0.015" material="shader: flat; transparent: true; opacity: 0.8"></a-mixin>
+
+        <a-mixin
+            id="sparkle"
+            geometry="primitive: sphere; radius: 0.015"
+            material="shader: flat; transparent: true; opacity: 0.8">
+        </a-mixin>
+
     </a-assets>
 
-    <a-marker preset="hiro">
+    <!-- HIRO MARKER -->
+    <a-marker
+        id="hiro-marker"
+        preset="hiro"
+        emitevents="true"
+        smooth="true"
+        smooth-count="5"
+        smooth-tolerance="0.01"
+        smooth-threshold="2">
 
-        <a-circle rotation="-90 0 0" radius="1.3" position="0 0.01 0" material="src: #wood; roughness: 1"></a-circle>
+        <!-- WOODEN PLATFORM -->
+        <a-circle
+            rotation="-90 0 0"
+            radius="1.3"
+            position="0 0.01 0"
+            material="src: #wood; roughness: 1; side: double">
+        </a-circle>
 
-        <a-entity 
-            geometry="primitive: cylinder; radius: 1.6; height: 2; thetaStart: 120; thetaLength: 120; openEnded: true"
-            material="src: #hallEnv; side: back; shader: flat"
+        <!-- BACKGROUND ENVIRONMENT -->
+        <a-entity
+            geometry="primitive: cylinder;
+                      radius: 1.6;
+                      height: 2;
+                      thetaStart: 120;
+                      thetaLength: 120;
+                      openEnded: true"
+            material="src: #hallEnv;
+                      side: back;
+                      shader: flat;
+                      transparent: false"
             position="0 0 -0.75">
         </a-entity>
 
+        <!-- EVENT BOARD AND GALLERY -->
         <a-entity position="0 0.9 -0.4">
 
-            <a-entity id="board-ui" position="-0.4 0 0" rotation="0 8 0">
-                <a-plane src="#archBoard" width="1" height="1.7" material="transparent: true; alphaTest: 0.5; shader: flat"></a-plane>
+            <!-- BOARD -->
+            <a-entity
+                id="board-ui"
+                position="-0.4 0 0"
+                rotation="0 8 0">
 
-                <a-entity position="0 0 0.1">
-                    <a-text value="THE WEDDING SCHEDULE" position="0 0.7 0" align="center" color="#000000" width="2" font="serif"></a-text>
+                <a-plane
+                    src="#archBoard"
+                    width="1"
+                    height="1.7"
+                    material="transparent: true;
+                              alphaTest: 0.5;
+                              shader: flat;
+                              side: double">
+                </a-plane>
+
+                <!-- SCHEDULE TEXT -->
+                <a-entity position="0 0 0.12">
+
+                    <a-text
+                        value="THE WEDDING SCHEDULE"
+                        position="0 0.7 0"
+                        align="center"
+                        color="#000000"
+                        width="1.8">
+                    </a-text>
 
                     <a-entity position="-0.3 0.4 0">
-                        <a-text value="10:30 AM" color="#000000" width="2" align="left"></a-text>
-                        <a-text value="HALDI CEREMONY" position="0 -0.12 0.02" color="#000000" width="2" align="left" font="serif"></a-text>
+
+                        <a-text
+                            value="10:30 AM"
+                            color="#000000"
+                            width="2"
+                            align="left">
+                        </a-text>
+
+                        <a-text
+                            value="HALDI CEREMONY"
+                            position="0 -0.12 0.02"
+                            color="#000000"
+                            width="2"
+                            align="left">
+                        </a-text>
+
                     </a-entity>
 
                     <a-entity position="-0.3 0.1 0">
-                        <a-text value="04:00 PM" color="#000000" width="2" align="left"></a-text>
-                        <a-text value="BARAAT & SWAGAT" position="0 -0.12 0.02" color="#000000" width="2" align="left" font="serif"></a-text>
+
+                        <a-text
+                            value="04:00 PM"
+                            color="#000000"
+                            width="2"
+                            align="left">
+                        </a-text>
+
+                        <a-text
+                            value="BARAAT &amp; SWAGAT"
+                            position="0 -0.12 0.02"
+                            color="#000000"
+                            width="2"
+                            align="left">
+                        </a-text>
+
                     </a-entity>
 
                     <a-entity position="-0.3 -0.2 0">
-                        <a-text value="06:30 PM" color="#000000" width="2" align="left"></a-text>
-                        <a-text value="SHUBH VIVAH" position="0 -0.12 0.02" color="#000000" width="2" align="left" font="serif"></a-text>
+
+                        <a-text
+                            value="06:30 PM"
+                            color="#000000"
+                            width="2"
+                            align="left">
+                        </a-text>
+
+                        <a-text
+                            value="SHUBH VIVAH"
+                            position="0 -0.12 0.02"
+                            color="#000000"
+                            width="2"
+                            align="left">
+                        </a-text>
+
                     </a-entity>
 
                     <a-entity position="-0.3 -0.5 0">
-                        <a-text value="08:30 PM" color="#000000" width="2" align="left"></a-text>
-                        <a-text value="DINNER & SANGEET" position="0 -0.12 0.02" color="#000000" width="2" align="left" font="serif"></a-text>
+
+                        <a-text
+                            value="08:30 PM"
+                            color="#000000"
+                            width="2"
+                            align="left">
+                        </a-text>
+
+                        <a-text
+                            value="DINNER &amp; SANGEET"
+                            position="0 -0.12 0.02"
+                            color="#000000"
+                            width="2"
+                            align="left">
+                        </a-text>
+
                     </a-entity>
+
                 </a-entity>
+
             </a-entity>
 
-            <a-entity id="gallery" position="0.5 0 0" rotation="0 -10 0">
-                <a-plane src="#g_bride" width="0.35" height="0.45" position="-0.1 0.3 0.05" rotation="0 0 -5" material="shader: flat"></a-plane>
-                <a-plane src="#g_barat" width="0.35" height="0.45" position="0.1 0 0.08" rotation="0 0 5" material="shader: flat"></a-plane>
-                <a-plane src="#g_sanget" width="0.35" height="0.45" position="-0.05 -0.3 0.05" rotation="0 0 8" material="shader: flat"></a-plane>
+            <!-- IMAGE GALLERY -->
+            <a-entity
+                id="gallery"
+                position="0.5 0 0"
+                rotation="0 -10 0">
+
+                <a-plane
+                    src="#g_bride"
+                    width="0.35"
+                    height="0.45"
+                    position="-0.1 0.3 0.05"
+                    rotation="0 0 -5"
+                    material="shader: flat; side: double">
+                </a-plane>
+
+                <a-plane
+                    src="#g_barat"
+                    width="0.35"
+                    height="0.45"
+                    position="0.1 0 0.08"
+                    rotation="0 0 5"
+                    material="shader: flat; side: double">
+                </a-plane>
+
+                <a-plane
+                    src="#g_sanget"
+                    width="0.35"
+                    height="0.45"
+                    position="-0.05 -0.3 0.05"
+                    rotation="0 0 8"
+                    material="shader: flat; side: double">
+                </a-plane>
+
             </a-entity>
 
         </a-entity>
 
+        <!-- SPARKLE EFFECTS -->
         <a-entity id="sparkle-layer">
-            <a-entity mixin="sparkle" color="#FFD700" position="-0.4 1.2 0.3" animation="property: position; to: -0.4 1.5 0.3; dur: 3000; dir: alternate; loop: true"></a-entity>
-            <a-entity mixin="sparkle" color="#FFFFFF" position="0.5 0.9 0.4" animation="property: scale; from: 1 1 1; to: 0.3 0.3 0.3; dur: 1200; dir: alternate; loop: true"></a-entity>
+
+            <a-entity
+                mixin="sparkle"
+                color="#FFD700"
+                position="-0.4 1.2 0.3"
+                animation="property: position;
+                           from: -0.4 1.2 0.3;
+                           to: -0.4 1.5 0.3;
+                           dur: 3000;
+                           dir: alternate;
+                           loop: true">
+            </a-entity>
+
+            <a-entity
+                mixin="sparkle"
+                color="#FFFFFF"
+                position="0.5 0.9 0.4"
+                animation="property: scale;
+                           from: 1 1 1;
+                           to: 0.3 0.3 0.3;
+                           dur: 1200;
+                           dir: alternate;
+                           loop: true">
+            </a-entity>
+
         </a-entity>
 
-        <a-light type="ambient" intensity="1.4" color="#FFF5CC"></a-light>
+        <!-- LIGHTING -->
+        <a-light
+            type="ambient"
+            intensity="1.4"
+            color="#FFF5CC">
+        </a-light>
+
     </a-marker>
 
+    <!-- CAMERA -->
     <a-entity camera></a-entity>
+
 </a-scene>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const state = {
+    cameraReady: false,
+    markerVisible: false,
+    detections: 0,
+    losses: 0,
+    visibleSince: null,
+    totalVisibleMs: 0,
+    firstDetectionMs: null,
+    startTime: performance.now(),
+    fps: 0
+};
+
+let toastTimer = null;
+
+/* NOTIFICATIONS */
+function notify(message, duration = 4000) {
+    const toast = $("toast");
+
+    toast.textContent = message;
+    toast.style.display = "block";
+
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+        toast.style.display = "none";
+    }, duration);
+}
+
+/* STATUS */
+function setStatus(message, active = false) {
+    $("status-text").textContent = message;
+    $("dot").classList.toggle("active", active);
+}
+
+/* POPUP */
+function toggleSchedule() {
+    const panel = $("schedule-panel");
+
+    panel.style.display =
+        panel.style.display === "block"
+            ? "none"
+            : "block";
+}
+
+function toggleMetrics() {
+    $("metrics").classList.toggle("visible");
+    updateMetrics();
+}
+
+/* FIND AR.JS CAMERA VIDEO */
+function getCameraVideo() {
+    const videos = [...document.querySelectorAll("video")];
+
+    return videos.find(v =>
+        v.id === "arjs-video"
+    ) || videos.find(v =>
+        v.videoWidth > 0 &&
+        v.videoHeight > 0
+    ) || null;
+}
+
+/* CAMERA CHECK */
+function checkCamera() {
+    const video = getCameraVideo();
+
+    if (!video) return false;
+
+    video.style.visibility = "visible";
+    video.style.display = "block";
+
+    if (
+        video.readyState >= 2 &&
+        video.videoWidth > 0 &&
+        video.videoHeight > 0
+    ) {
+        state.cameraReady = true;
+
+        $("camera-state").textContent = "ON";
+
+        if (!state.markerVisible) {
+            setStatus("Camera ready — scan Hiro marker");
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+/* MONITOR CAMERA STARTUP */
+function monitorCamera() {
+    let attempts = 0;
+
+    const timer = setInterval(() => {
+        attempts++;
+
+        if (checkCamera()) {
+            clearInterval(timer);
+            return;
+        }
+
+        if (attempts >= 30) {
+            clearInterval(timer);
+
+            setStatus("Camera not ready");
+
+            notify(
+                "Check HTTPS and camera permissions.",
+                7000
+            );
+        }
+    }, 500);
+}
+
+/* MARKER TRACKING */
+function setupMarkerTracking() {
+    const marker = $("hiro-marker");
+
+    marker.addEventListener("markerFound", () => {
+        if (state.markerVisible) return;
+
+        const now = performance.now();
+
+        state.markerVisible = true;
+        state.detections++;
+        state.visibleSince = now;
+
+        if (state.firstDetectionMs === null) {
+            state.firstDetectionMs = now - state.startTime;
+        }
+
+        setStatus("Hiro marker detected — Schedule active", true);
+
+        updateMetrics();
+    });
+
+    marker.addEventListener("markerLost", () => {
+        if (!state.markerVisible) return;
+
+        state.totalVisibleMs +=
+            performance.now() - state.visibleSince;
+
+        state.visibleSince = null;
+        state.markerVisible = false;
+        state.losses++;
+
+        setStatus("Marker lost — scan Hiro marker");
+
+        updateMetrics();
+    });
+}
+
+/* TRACKING DURATION */
+function getVisibleTime() {
+    let total = state.totalVisibleMs;
+
+    if (
+        state.markerVisible &&
+        state.visibleSince !== null
+    ) {
+        total += performance.now() - state.visibleSince;
+    }
+
+    return total;
+}
+
+/* UPDATE METRICS */
+function updateMetrics() {
+    $("detections").textContent = state.detections;
+    $("losses").textContent = state.losses;
+
+    $("visible-time").textContent =
+        (getVisibleTime() / 1000).toFixed(1);
+
+    $("first-time").textContent =
+        state.firstDetectionMs === null
+            ? "--"
+            : (state.firstDetectionMs / 1000).toFixed(2) + "s";
+
+    $("fps").textContent =
+        state.fps > 0 ? state.fps.toFixed(1) : "--";
+
+    $("camera-state").textContent =
+        state.cameraReady ? "ON" : "WAITING";
+}
+
+/* APPROXIMATE ANIMATION FRAME RATE */
+function startFPS() {
+    let frames = 0;
+    let previous = performance.now();
+    let running = false;
+
+    function measure(now) {
+        if (document.hidden) {
+            running = false;
+            return;
+        }
+
+        frames++;
+
+        if (now - previous >= 1000) {
+            state.fps =
+                frames * 1000 / (now - previous);
+
+            frames = 0;
+            previous = now;
+
+            updateMetrics();
+        }
+
+        requestAnimationFrame(measure);
+    }
+
+    function resume() {
+        if (!document.hidden && !running) {
+            running = true;
+            frames = 0;
+            previous = performance.now();
+
+            requestAnimationFrame(measure);
+        }
+    }
+
+    document.addEventListener("visibilitychange", resume);
+    resume();
+}
+
+/* INITIALIZE */
+function initialize() {
+    setupMarkerTracking();
+    startFPS();
+
+    if (!window.isSecureContext) {
+        setStatus("HTTPS required");
+
+        notify(
+            "Open the website using HTTPS or localhost.",
+            8000
+        );
+
+        return;
+    }
+
+    window.addEventListener(
+        "arjs-video-loaded",
+        checkCamera
+    );
+
+    window.addEventListener(
+        "camera-init",
+        checkCamera
+    );
+
+    window.addEventListener("camera-error", error => {
+        console.error("Camera error:", error);
+
+        setStatus("Camera initialization failed");
+
+        notify(
+            "Camera unavailable. Check browser permissions.",
+            7000
+        );
+    });
+
+    $("ar-scene").addEventListener("asset-error", event => {
+        console.error("Asset loading error:", event.detail);
+
+        notify("A wedding image failed to load.");
+    });
+
+    monitorCamera();
+    updateMetrics();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialize);
+} else {
+    initialize();
+}
+</script>
 
 </body>
 </html>
