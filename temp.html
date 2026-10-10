@@ -199,7 +199,7 @@
                 gltf-model="couple.glb"
                 position="0 1 0.2"
                 scale="0.75 0.75 0.75"
-                animation="property: rotation; to: 0 360 0; dur: 15000; easing: linear; loop: true">
+                animation="startEvents: marker-appeared; property: rotation; to: 0 360 0; dur: 15000; easing: linear; loop: true">
             </a-entity>
 
             <!-- Wedding title -->
@@ -209,7 +209,7 @@
                     align="center"
                     color="#FFD700"
                     width="5"
-                    animation="property: scale; to: 1.1 1.1 1.1; dir: alternate; dur: 1200; loop: true">
+                    animation="startEvents: marker-appeared; property: scale; to: 1.1 1.1 1.1; dir: alternate; dur: 1200; loop: true">
                 </a-text>
 
                 <a-text
@@ -239,49 +239,49 @@
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="property: position; to: -0.8 0 0; dur: 4000; loop: true; easing: linear">
+                    animation="startEvents: marker-appeared; property: position; to: -0.8 0 0; dur: 4000; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="0.8 3.5 0.5"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="property: position; to: 0.8 0 0.5; dur: 5000; loop: true; easing: linear">
+                    animation="startEvents: marker-appeared; property: position; to: 0.8 0 0.5; dur: 5000; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.3 4 -0.5"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear">
+                    animation="startEvents: marker-appeared; property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.6 2.3 0.1"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="property: position; to: -0.3 0 0.1; dur: 4500; loop: true; easing: linear">
+                    animation="startEvents: marker-appeared; property: position; to: -0.3 0 0.1; dur: 4500; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.8 2.1 -0.7"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear">
+                    animation="startEvents: marker-appeared; property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.1 3.2 -0.9"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="property: position; to: -0.1 0 -0.9; dur: 4500; loop: true; easing: linear">
+                    animation="startEvents: marker-appeared; property: position; to: -0.1 0 -0.9; dur: 4500; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.1 2.8 -1"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="property: position; to: -0.1 0 -1; dur: 4500; loop: true; easing: linear">
+                    animation="startEvents: marker-appeared; property: position; to: -0.1 0 -1; dur: 4500; loop: true; easing: linear">
                 </a-plane>
             </a-entity>
 
@@ -595,17 +595,72 @@
         }
 
         // ==========================================
-        // START OCR
+        // INITIALIZATION: RENDER FIRST, THEN OCR
         // ==========================================
+        // Animations should begin when the Hiro marker is visible,
+        // rather than running invisibly during page/asset loading.
+        const arScene = document.querySelector("a-scene");
+        const weddingMarker = document.getElementById("wedding-marker");
+        const models = Array.from(weddingMarker.querySelectorAll("[gltf-model]"));
+        const pendingModels = new Set(models);
+        let sceneReady = false;
+        let scanStarted = false;
 
-        window.addEventListener("load", () => {
-            statusBox.textContent =
-                "Camera starting. Show the guest name card.";
+        function beginAnimations() {
+            weddingMarker.querySelectorAll("[animation]").forEach(entity => {
+                entity.emit("marker-appeared");
+            });
+        }
 
-            setTimeout(() => {
-                scan();
-            }, 3000);
-        });
+        weddingMarker.addEventListener("markerFound", beginAnimations);
+
+        function beginOCRWhenReady() {
+            if (!sceneReady || pendingModels.size || scanStarted) return;
+            scanStarted = true;
+            statusBox.textContent = "Show the guest name card to the camera.";
+
+            // Let the browser draw the AR scene before starting expensive OCR.
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                window.setTimeout(scan, 700);
+            }));
+        }
+
+        for (const model of models) {
+            model.addEventListener("model-loaded", () => {
+                pendingModels.delete(model);
+                // If a model finishes while a marker is in view,
+                // restart that model's animation at its first frame.
+                if (weddingMarker.object3D.visible && model.hasAttribute("animation")) {
+                    model.emit("marker-appeared");
+                }
+                beginOCRWhenReady();
+            });
+            model.addEventListener("model-error", () => {
+                pendingModels.delete(model);
+                console.warn("Could not load model:", model.getAttribute("gltf-model"));
+                beginOCRWhenReady();
+            });
+        }
+
+        function onSceneReady() {
+            if (sceneReady) return;
+            sceneReady = true;
+            statusBox.textContent = "AR ready. Loading wedding models...";
+            // Missing/slow models must not prevent OCR forever.
+            window.setTimeout(() => {
+                if (!scanStarted) {
+                    pendingModels.clear();
+                    beginOCRWhenReady();
+                }
+            }, 7000);
+            beginOCRWhenReady();
+        }
+
+        if (arScene.hasLoaded) {
+            onSceneReady();
+        } else {
+            arScene.addEventListener("loaded", onSceneReady, { once: true });
+        }
     </script>
 
 </body>
