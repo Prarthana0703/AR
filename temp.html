@@ -14,88 +14,57 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
     <style>
-        /* Visual refresh only. AR camera, scene, and OCR remain unchanged. */
-        :root { color-scheme: dark; }
-        html, body {
+        body {
             margin: 0;
-            width: 100%;
-            height: 100%;
             overflow: hidden;
             font-family: Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
         }
+
         #invite-btn {
             position: fixed;
-            bottom: max(20px, env(safe-area-inset-bottom));
-            left: max(18px, env(safe-area-inset-left));
-            width: 58px;
-            height: 58px;
-            display: grid;
-            place-items: center;
-            border-radius: 18px;
-            border: 1px solid rgba(255,255,255,.45);
-            font-size: 25px;
-            background: linear-gradient(145deg, #ff8eb9, #d83a7e);
+            bottom: 20px;
+            left: 20px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: none;
+            font-size: 22px;
+            background: #ff69b4;
             color: white;
             z-index: 999;
-            box-shadow: 0 6px 22px rgba(81, 5, 46, .42);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
             cursor: pointer;
-            transition: transform .18s ease, box-shadow .18s ease;
         }
-        #invite-btn:active { transform: scale(.95); }
-        #invite-btn:focus-visible { outline: 3px solid #ffe49a; outline-offset: 3px; }
+
         #invite-box {
             position: fixed;
-            bottom: max(94px, calc(env(safe-area-inset-bottom) + 94px));
-            left: max(18px, env(safe-area-inset-left));
-            width: min(305px, calc(100vw - 36px));
-            padding: 20px 20px 18px;
-            background: linear-gradient(155deg, rgba(38, 18, 43, .96), rgba(17, 13, 29, .96));
-            color: #fff8f3;
-            border-radius: 18px;
+            bottom: 90px;
+            left: 20px;
+            width: 220px;
+            padding: 12px;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            border-radius: 10px;
             font-size: 14px;
             display: none;
             z-index: 999;
-            border: 1px solid rgba(255, 215, 112, .78);
-            line-height: 1.75;
-            box-shadow: 0 14px 38px rgba(0, 0, 0, .45);
-            backdrop-filter: blur(10px);
+            border: 1px solid #FFD700;
+            line-height: 1.6;
         }
-        #invite-box::before {
-            content: '💍  WEDDING INVITATION';
-            display: block;
-            margin-bottom: 10px;
-            color: #ffe2a2;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.2px;
-        }
-        #invite-box p { margin: 0; }
-        #invite-box b { color: #ffdca0; }
+
         #ocr-status {
             position: fixed;
-            top: max(14px, env(safe-area-inset-top));
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            width: max-content;
-            max-width: calc(100vw - 28px);
-            padding: 10px 16px;
-            background: rgba(28, 17, 38, .88);
-            color: #fff3d6;
-            border: 1px solid rgba(255, 217, 142, .72);
-            border-radius: 999px;
-            font-size: 12px;
-            line-height: 1.4;
-            font-weight: 600;
+            padding: 10px 14px;
+            background: rgba(0,0,0,0.75);
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
             z-index: 999;
             text-align: center;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, .3);
-            backdrop-filter: blur(8px);
-            pointer-events: none;
-        }
-        @media (max-width: 420px) {
-            #invite-box { font-size: 13px; }
-            #ocr-status { font-size: 11px; }
+            max-width: 85%;
         }
     </style>
 </head>
@@ -199,7 +168,7 @@
                 gltf-model="couple.glb"
                 position="0 1 0.2"
                 scale="0.75 0.75 0.75"
-                animation="startEvents: marker-appeared; property: rotation; to: 0 360 0; dur: 15000; easing: linear; loop: true">
+                animation="property: rotation; to: 0 360 0; dur: 15000; easing: linear; loop: true">
             </a-entity>
 
             <!-- Wedding title -->
@@ -209,7 +178,7 @@
                     align="center"
                     color="#FFD700"
                     width="5"
-                    animation="startEvents: marker-appeared; property: scale; to: 1.1 1.1 1.1; dir: alternate; dur: 1200; loop: true">
+                    animation="property: scale; to: 1.1 1.1 1.1; dir: alternate; dur: 1200; loop: true">
                 </a-text>
 
                 <a-text
@@ -239,49 +208,49 @@
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="startEvents: marker-appeared; property: position; to: -0.8 0 0; dur: 4000; loop: true; easing: linear">
+                    animation="property: position; to: -0.8 0 0; dur: 4000; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="0.8 3.5 0.5"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="startEvents: marker-appeared; property: position; to: 0.8 0 0.5; dur: 5000; loop: true; easing: linear">
+                    animation="property: position; to: 0.8 0 0.5; dur: 5000; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.3 4 -0.5"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="startEvents: marker-appeared; property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear">
+                    animation="property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.6 2.3 0.1"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="startEvents: marker-appeared; property: position; to: -0.3 0 0.1; dur: 4500; loop: true; easing: linear">
+                    animation="property: position; to: -0.3 0 0.1; dur: 4500; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.8 2.1 -0.7"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="startEvents: marker-appeared; property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear">
+                    animation="property: position; to: -0.3 0 -0.5; dur: 4500; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.1 3.2 -0.9"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="startEvents: marker-appeared; property: position; to: -0.1 0 -0.9; dur: 4500; loop: true; easing: linear">
+                    animation="property: position; to: -0.1 0 -0.9; dur: 4500; loop: true; easing: linear">
                 </a-plane>
 
                 <a-plane src="#rose" position="-0.1 2.8 -1"
                     width="0.2" height="0.2"
                     material="transparent: true; side: double"
                     look-at="[camera]"
-                    animation="startEvents: marker-appeared; property: position; to: -0.1 0 -1; dur: 4500; loop: true; easing: linear">
+                    animation="property: position; to: -0.1 0 -1; dur: 4500; loop: true; easing: linear">
                 </a-plane>
             </a-entity>
 
@@ -595,72 +564,17 @@
         }
 
         // ==========================================
-        // INITIALIZATION: RENDER FIRST, THEN OCR
+        // START OCR
         // ==========================================
-        // Animations should begin when the Hiro marker is visible,
-        // rather than running invisibly during page/asset loading.
-        const arScene = document.querySelector("a-scene");
-        const weddingMarker = document.getElementById("wedding-marker");
-        const models = Array.from(weddingMarker.querySelectorAll("[gltf-model]"));
-        const pendingModels = new Set(models);
-        let sceneReady = false;
-        let scanStarted = false;
 
-        function beginAnimations() {
-            weddingMarker.querySelectorAll("[animation]").forEach(entity => {
-                entity.emit("marker-appeared");
-            });
-        }
+        window.addEventListener("load", () => {
+            statusBox.textContent =
+                "Camera starting. Show the guest name card.";
 
-        weddingMarker.addEventListener("markerFound", beginAnimations);
-
-        function beginOCRWhenReady() {
-            if (!sceneReady || pendingModels.size || scanStarted) return;
-            scanStarted = true;
-            statusBox.textContent = "Show the guest name card to the camera.";
-
-            // Let the browser draw the AR scene before starting expensive OCR.
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                window.setTimeout(scan, 700);
-            }));
-        }
-
-        for (const model of models) {
-            model.addEventListener("model-loaded", () => {
-                pendingModels.delete(model);
-                // If a model finishes while a marker is in view,
-                // restart that model's animation at its first frame.
-                if (weddingMarker.object3D.visible && model.hasAttribute("animation")) {
-                    model.emit("marker-appeared");
-                }
-                beginOCRWhenReady();
-            });
-            model.addEventListener("model-error", () => {
-                pendingModels.delete(model);
-                console.warn("Could not load model:", model.getAttribute("gltf-model"));
-                beginOCRWhenReady();
-            });
-        }
-
-        function onSceneReady() {
-            if (sceneReady) return;
-            sceneReady = true;
-            statusBox.textContent = "AR ready. Loading wedding models...";
-            // Missing/slow models must not prevent OCR forever.
-            window.setTimeout(() => {
-                if (!scanStarted) {
-                    pendingModels.clear();
-                    beginOCRWhenReady();
-                }
-            }, 7000);
-            beginOCRWhenReady();
-        }
-
-        if (arScene.hasLoaded) {
-            onSceneReady();
-        } else {
-            arScene.addEventListener("loaded", onSceneReady, { once: true });
-        }
+            setTimeout(() => {
+                scan();
+            }, 3000);
+        });
     </script>
 
 </body>
