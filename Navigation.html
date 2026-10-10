@@ -3,1055 +3,1153 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>AR Live Navigation</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>AR Live Wedding Navigation</title>
 
 <style>
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+ width:100%;height:100%;overflow:hidden;
+ background:#000;color:#fff;font-family:Arial,sans-serif
 }
-html, body {
-    width: 100%;
-    height: 100%;
-    background: #000;
-    color: white;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-}
+button{font:inherit;cursor:pointer}
 
-/* LIVE CAMERA */
-#camera {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 0;
-    background: #000;
+/* CAMERA */
+#camera{
+ position:fixed;inset:0;width:100%;height:100%;
+ object-fit:cover;background:#000;z-index:0
 }
+#overlay{position:fixed;inset:0;z-index:2;pointer-events:none}
+.panel{
+ background:rgba(4,16,24,.84);
+ border:1px solid rgba(0,255,231,.5);
+ border-radius:12px;
+ backdrop-filter:blur(8px)
+}
+#topbar{
+ position:absolute;top:max(14px,env(safe-area-inset-top));
+ left:50%;transform:translateX(-50%);
+ display:flex;gap:15px;padding:12px;max-width:96vw
+}
+.stat{text-align:center}
+.stat small{color:#00ffe7;font-size:10px}
+.stat div{font-size:12px;margin-top:5px}
 
-/* AR OVERLAY */
-#overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
+/* AR DIRECTION INDICATOR */
+#arrow-area{
+ position:absolute;left:50%;top:43%;
+ transform:translate(-50%,-50%);
+ text-align:center;display:none
 }
-
-.panel {
-    background: rgba(4,16,24,0.80);
-    border: 1px solid rgba(0,255,231,0.45);
-    border-radius: 12px;
-    backdrop-filter: blur(8px);
+#main-arrow{
+ width:140px;height:140px;
+ filter:drop-shadow(0 0 18px #00ffe7);
+ transition:transform .25s ease
 }
-
-#topbar {
-    position: absolute;
-    top: max(14px, env(safe-area-inset-top));
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 15px;
-    padding: 12px;
-    max-width: 96vw;
+#arrow-distance{
+ margin-top:15px;font-size:24px;font-weight:bold;
+ color:#00ffe7;text-shadow:0 2px 8px #000
 }
-
-.stat {
-    text-align: center;
+#instruction{
+ position:absolute;bottom:205px;left:50%;
+ transform:translateX(-50%);padding:14px;
+ width:min(92vw,400px);text-align:center;display:none
 }
-
-.stat small {
-    color: #00ffe7;
-    font-size: 10px;
-}
-
-.stat div {
-    font-size: 12px;
-    margin-top: 5px;
-}
-
-/* DIRECTION ARROW */
-#arrow-area {
-    position: absolute;
-    left: 50%;
-    top: 43%;
-    transform: translate(-50%,-50%);
-    text-align: center;
-    display: none;
-}
-
-#main-arrow {
-    width: 140px;
-    height: 140px;
-    filter: drop-shadow(0 0 18px #00ffe7);
-    transition: transform 0.3s ease;
-}
-
-#arrow-distance {
-    margin-top: 15px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #00ffe7;
-    text-shadow: 0 2px 8px #000;
-}
-
-/* DIRECTION PANEL */
-#instruction {
-    position: absolute;
-    bottom: 205px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 14px;
-    width: min(92vw,400px);
-    text-align: center;
-    display: none;
-}
-
-#instruction-text {
-    font-size: 18px;
-    font-weight: bold;
-    line-height: 1.4;
-}
-
-#instruction-distance {
-    margin-top: 7px;
-    color: #00ffe7;
-    font-size: 13px;
-}
+#instruction-text{font-size:18px;font-weight:bold;line-height:1.4}
+#instruction-distance{margin-top:7px;color:#00ffe7;font-size:13px}
 
 /* COMPASS */
-#compass {
-    position: absolute;
-    right: 15px;
-    top: 90px;
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+#compass{
+ position:absolute;right:15px;top:90px;
+ width:70px;height:70px;border-radius:50%;
+ display:flex;align-items:center;justify-content:center
+}
+#needle{
+ height:48px;width:5px;border-radius:5px;
+ background:linear-gradient(to bottom,#ff4444 50%,#fff 50%);
+ transition:transform .2s ease
 }
 
-#needle {
-    height: 48px;
-    width: 5px;
-    border-radius: 5px;
-    background: linear-gradient(
-        to bottom,
-        #ff4444 50%,
-        #ffffff 50%
-    );
-    transition: transform .2s ease;
+/* STATS AND MAP */
+#bottom-stats{
+ position:absolute;bottom:max(15px,env(safe-area-inset-bottom));
+ left:12px;padding:12px;display:none
 }
-
-/* BOTTOM STATS */
-#bottom-stats {
-    position: absolute;
-    bottom: max(15px,env(safe-area-inset-bottom));
-    left: 12px;
-    padding: 12px;
-    display: none;
+#bottom-stats small{color:#00ffe7;font-size:10px}
+#bottom-stats strong{
+ display:block;margin:5px 0 12px;font-size:17px
 }
-
-#bottom-stats small {
-    color: #00ffe7;
-    font-size: 10px;
+#map-box{
+ position:absolute;bottom:max(15px,env(safe-area-inset-bottom));
+ right:12px;width:170px;height:170px;
+ overflow:hidden;pointer-events:auto;display:none
 }
+#map{width:100%;height:100%}
 
-#bottom-stats strong {
-    display: block;
-    margin: 5px 0 12px;
-    font-size: 17px;
+/* BUTTONS */
+.control{
+ pointer-events:auto;background:rgba(0,14,22,.94);
+ border:1px solid #00ffe7;border-radius:10px;
+ color:#00ffe7;padding:11px 14px;
+ font-weight:bold;font-size:12px
 }
-
-/* MAP */
-#map-box {
-    position: absolute;
-    bottom: max(15px,env(safe-area-inset-bottom));
-    right: 12px;
-    width: 170px;
-    height: 170px;
-    overflow: hidden;
-    pointer-events: auto;
+.control:disabled{opacity:.5}
+#start{
+ position:absolute;left:50%;top:50%;
+ transform:translate(-50%,-50%);
+ font-size:18px;white-space:nowrap
 }
+#back{position:absolute;left:12px;top:90px}
+#zoom{position:absolute;right:14px;top:177px;display:none}
+#steps-button{position:absolute;left:12px;top:145px;display:none}
+#reroute-button{position:absolute;left:12px;top:200px;display:none}
+#metrics-button{position:absolute;left:12px;top:255px;display:none}
 
-#map {
-    width: 100%;
-    height: 100%;
+#steps{
+ position:absolute;top:310px;left:12px;
+ width:min(280px,85vw);max-height:32vh;
+ overflow:auto;display:none;padding:12px;
+ pointer-events:auto
 }
-
-/* CONTROLS */
-.control {
-    pointer-events: auto;
-    background: rgba(0,14,22,.90);
-    border: 1px solid #00ffe7;
-    border-radius: 10px;
-    color: #00ffe7;
-    cursor: pointer;
-    padding: 12px 18px;
-    font-weight: bold;
+.step{
+ font-size:13px;padding:9px 0;
+ border-bottom:1px solid #334
 }
+.step.active{color:#00ffe7;font-weight:bold}
 
-#start {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%,-50%);
-    font-size: 18px;
-    white-space: nowrap;
+#status{
+ position:absolute;top:65%;left:50%;
+ transform:translateX(-50%);
+ width:min(92vw,400px);text-align:center;
+ background:rgba(0,0,0,.87);color:white;
+ border-radius:8px;padding:12px;
+ font-size:13px;line-height:1.5;display:none
 }
-
-#back {
-    position: absolute;
-    left: 12px;
-    top: 90px;
+#metrics{
+ position:absolute;top:310px;right:10px;
+ padding:12px;font:11px/1.8 monospace;
+ display:none;max-width:68vw
 }
+#metrics.visible{display:block}
 
-#zoom {
-    position: absolute;
-    right: 14px;
-    top: 177px;
-    display: none;
-}
-
-#status {
-    position: absolute;
-    top: 65%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(92vw,400px);
-    text-align: center;
-    background: rgba(0,0,0,.83);
-    color: #fff;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 13px;
-    line-height: 1.5;
-    display: none;
-}
-
-#steps-button {
-    position: absolute;
-    left: 12px;
-    top: 145px;
-    display: none;
-}
-
-#steps {
-    position: absolute;
-    top: 200px;
-    left: 12px;
-    width: min(260px,80vw);
-    max-height: 35vh;
-    overflow-y: auto;
-    display: none;
-    padding: 12px;
-    pointer-events: auto;
-}
-
-.step {
-    font-size: 13px;
-    padding: 9px 0;
-    border-bottom: 1px solid #334;
-}
-
-.step.active {
-    color: #00ffe7;
-}
-
-@media(max-width:600px) {
-    #topbar {
-        gap: 8px;
-        padding: 9px;
-    }
-
-    .stat small {
-        font-size: 8px;
-    }
-
-    .stat div {
-        font-size: 10px;
-    }
-
-    #main-arrow {
-        width: 115px;
-        height: 115px;
-    }
-
-    #arrow-distance {
-        font-size: 19px;
-    }
-
-    #map-box {
-        width: 130px;
-        height: 130px;
-    }
-
-    #bottom-stats {
-        padding: 9px;
-    }
-
-    #bottom-stats strong {
-        font-size: 14px;
-    }
-
-    #instruction {
-        bottom: 165px;
-        padding: 11px;
-    }
-
-    #instruction-text {
-        font-size: 15px;
-    }
-
-    #compass {
-        width: 55px;
-        height: 55px;
-    }
-
-    #needle {
-        height: 38px;
-    }
-
-    #zoom {
-        top: 160px;
-    }
+/* MOBILE */
+@media(max-width:600px){
+ #topbar{gap:8px;padding:9px}
+ .stat small{font-size:8px}
+ .stat div{font-size:10px}
+ #main-arrow{width:115px;height:115px}
+ #arrow-distance{font-size:19px}
+ #map-box{width:130px;height:130px}
+ #bottom-stats{padding:9px}
+ #bottom-stats strong{font-size:14px}
+ #instruction{bottom:165px;padding:11px}
+ #instruction-text{font-size:15px}
+ #compass{width:55px;height:55px}
+ #needle{height:38px}
+ #zoom{top:160px}
+ #reroute-button{top:197px}
+ #metrics-button{top:247px}
+ #metrics{top:300px}
 }
 </style>
 </head>
 
 <body>
 
-<!-- DIRECT CAMERA VIDEO -->
-<video
-    id="camera"
-    autoplay
-    muted
-    playsinline
-    webkit-playsinline>
-</video>
+<!-- CAMERA -->
+<video id="camera" autoplay muted playsinline></video>
 
-<!-- AR NAVIGATION INTERFACE -->
 <div id="overlay">
 
-    <div id="topbar" class="panel">
-        <div class="stat">
-            <small>GPS</small>
-            <div id="gps">--</div>
-        </div>
+ <div id="topbar" class="panel">
+  <div class="stat">
+   <small>GPS</small><div id="gps">--</div>
+  </div>
+  <div class="stat">
+   <small>HEADING</small><div id="heading">--°</div>
+  </div>
+  <div class="stat">
+   <small>ACCURACY</small><div id="accuracy">--m</div>
+  </div>
+ </div>
 
-        <div class="stat">
-            <small>HEADING</small>
-            <div id="heading">--°</div>
-        </div>
+ <div id="compass" class="panel">
+  <div id="needle"></div>
+ </div>
 
-        <div class="stat">
-            <small>ACCURACY</small>
-            <div id="accuracy">--m</div>
-        </div>
-    </div>
+ <div id="arrow-area">
+  <svg id="main-arrow" viewBox="0 0 100 100">
+   <path d="M50 5 L93 78 L50 62 L7 78 Z"
+    fill="#00ffe7" stroke="#fff" stroke-width="2"/>
+  </svg>
+  <div id="arrow-distance">--</div>
+ </div>
 
-    <div id="compass" class="panel">
-        <div id="needle"></div>
-    </div>
+ <div id="instruction" class="panel">
+  <div id="instruction-text">Finding direction...</div>
+  <div id="instruction-distance">--</div>
+ </div>
 
-    <!-- AR DIRECTION ARROW -->
-    <div id="arrow-area">
-        <svg id="main-arrow" viewBox="0 0 100 100">
-            <path
-                d="M50 5 L93 78 L50 62 L7 78 Z"
-                fill="#00ffe7"
-                stroke="#ffffff"
-                stroke-width="2">
-            </path>
-        </svg>
-        <div id="arrow-distance">--</div>
-    </div>
+ <div id="bottom-stats" class="panel">
+  <small>DISTANCE LEFT</small>
+  <strong id="remaining">--</strong>
+  <small>ESTIMATED TIME</small>
+  <strong id="eta">--</strong>
+ </div>
 
-    <!-- NEXT INSTRUCTION -->
-    <div id="instruction" class="panel">
-        <div id="instruction-text">
-            Finding direction...
-        </div>
-        <div id="instruction-distance">--</div>
-    </div>
+ <div id="map-box" class="panel">
+  <div id="map"></div>
+ </div>
 
-    <!-- DISTANCE AND ETA -->
-    <div id="bottom-stats" class="panel">
-        <small>DISTANCE LEFT</small>
-        <strong id="remaining">--</strong>
+ <button id="start" class="control" onclick="startNavigation()">
+  ◉ START AR NAV
+ </button>
 
-        <small>ESTIMATED TIME</small>
-        <strong id="eta">--</strong>
-    </div>
+ <button id="back" class="control" onclick="goBack()">
+  ← BACK
+ </button>
 
-    <!-- MINI MAP -->
-    <div id="map-box" class="panel">
-        <div id="map"></div>
-    </div>
+ <button id="zoom" class="control" onclick="changeZoom()">
+  ZOOM
+ </button>
 
-    <!-- BUTTONS -->
-    <button id="start" class="control" onclick="startNavigation()">
-        ◉ START AR NAV
-    </button>
+ <button id="steps-button" class="control" onclick="toggleSteps()">
+  ROUTE STEPS
+ </button>
 
-    <button id="back" class="control" onclick="goBack()">
-        ← BACK
-    </button>
+ <button id="reroute-button" class="control" onclick="reroute(true)">
+  ↻ REROUTE
+ </button>
 
-    <button id="zoom" class="control" onclick="changeZoom()">
-        0.5×
-    </button>
+ <button id="metrics-button" class="control" onclick="toggleMetrics()">
+  METRICS
+ </button>
 
-    <button id="steps-button" class="control" onclick="toggleSteps()">
-        ROUTE STEPS
-    </button>
+ <div id="steps" class="panel"></div>
 
-    <div id="steps" class="panel"></div>
+ <div id="metrics" class="panel">
+  <div>Camera: <span id="m-camera">OFF</span></div>
+  <div>GPS accuracy: <span id="m-gps">--</span></div>
+  <div>Heading source: <span id="m-heading">--</span></div>
+  <div>Position fixes: <span id="m-fixes">0</span></div>
+  <div>Rejected fixes: <span id="m-rejected">0</span></div>
+  <div>Reroutes: <span id="m-reroutes">0</span></div>
+  <div>Off-route distance: <span id="m-offroute">--</span></div>
+  <div>Camera FPS: <span id="m-fps">--</span></div>
+  <div>Route state: <span id="m-route">Waiting</span></div>
+ </div>
 
-    <div id="status" role="status"></div>
-
+ <div id="status" role="status"></div>
 </div>
 
-<!-- YOUR RESTRICTED GOOGLE MAPS API KEY -->
-<script
-src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh_SqXafoV8q-EEXifAaCGqWOeRi50jNA">
-</script>
-
 <script>
+"use strict";
 
-/* CONFIGURATION */
-const DESTINATION = "Vellore Institute of Technology";
-const WAYPOINT_RADIUS = 15;
-const MAX_GPS_ACCURACY = 30;
+/*
+ CONFIGURATION
 
-let stream = null;
-let map = null;
-let marker = null;
-let directionsService = null;
-let directionsRenderer = null;
+ Replace the placeholder with your restricted
+ Google Maps JavaScript API key.
 
-let routeSteps = [];
-let currentStep = 0;
+ The existing Directions API (Legacy) must be
+ enabled in an eligible Google Cloud project.
+*/
+const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
 
-let latitude = null;
-let longitude = null;
-let heading = null;
-
-let watchId = null;
-let started = false;
-let arrived = false;
-
-let videoTrack = null;
-let zoomValues = [];
-let zoomIndex = 0;
-let currentAccuracy = Infinity;
-let orientationStarted = false;
+const CONFIG = {
+ destination: "Vellore Institute of Technology",
+ maxGPSAccuracy: 35,
+ progressAccuracy: 25,
+ waypointRadius: 14,
+ arrivalRadius: 18,
+ offRouteDistance: 45,
+ offRouteSamples: 3,
+ rerouteCooldownMs: 45000,
+ minRerouteIntervalMs: 15000,
+ maxPlausibleSpeed: 12,
+ walkingSpeed: 1.3,
+ cameraWidth: 1280,
+ cameraHeight: 720
+};
 
 const $ = id => document.getElementById(id);
 
-/* STATUS MESSAGE */
-function statusMessage(message, duration=0) {
-    const box = $("status");
-    box.textContent = message;
-    box.style.display = "block";
+const state = {
+ stream:null,
+ track:null,
+ started:false,
+ cameraReady:false,
+ zoomValues:[],
+ zoomIndex:0,
+ map:null,
+ locationMarker:null,
+ routeService:null,
+ routeRenderer:null,
+ routeSteps:[],
+ routePath:[],
+ currentStep:0,
+ routeBusy:false,
+ routingRequestId:0,
+ routeReady:false,
+ arrived:false,
+ latitude:null,
+ longitude:null,
+ accuracy:Infinity,
+ heading:null,
+ headingSource:"Unavailable",
+ headingQuality:false,
+ orientationStarted:false,
+ lastPosition:null,
+ watchId:null,
+ fixes:0,
+ rejected:0,
+ offRouteCount:0,
+ offRouteDistance:null,
+ reroutes:0,
+ lastRerouteTime:0,
+ fps:0,
+ lastSpokenStep:-1,
+ routeLength:0
+};
 
-    if(duration > 0) {
-        setTimeout(() => {
-            if(box.textContent === message) {
-                box.style.display = "none";
-            }
-        }, duration);
-    }
+let statusTimer=null;
+let mapsPromise=null;
+
+/* GENERAL HELPERS */
+function statusMessage(message,duration=0){
+ const box=$("status");
+ clearTimeout(statusTimer);
+ box.textContent=message;
+ box.style.display="block";
+ if(duration>0){
+  statusTimer=setTimeout(()=>{
+   if(box.textContent===message)
+    box.style.display="none";
+  },duration);
+ }
 }
 
-/* START CAMERA FIRST */
-async function openCamera() {
-    if(!navigator.mediaDevices?.getUserMedia) {
-        throw new Error(
-            "Camera access unavailable. Use HTTPS and a supported browser."
-        );
-    }
-
-    const constraints = [
-        {
-            audio: false,
-            video: {
-                facingMode: {ideal:"environment"},
-                width: {ideal:1280},
-                height: {ideal:720}
-            }
-        },
-        {
-            audio:false,
-            video:true
-        }
-    ];
-
-    let lastError;
-
-    for(const options of constraints) {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia(options);
-            break;
-        } catch(error) {
-            lastError = error;
-        }
-    }
-
-    if(!stream) {
-        throw lastError || new Error("Camera unavailable");
-    }
-
-    const video = $("camera");
-    video.srcObject = stream;
-
-    await video.play();
-
-    videoTrack = stream.getVideoTracks()[0];
-
-    /* OPTIONAL HARDWARE ZOOM */
-    try {
-        const caps = videoTrack.getCapabilities?.();
-
-        if(caps?.zoom) {
-            const {min,max,step} = caps.zoom;
-            const increment = step || (max-min)/10 || 1;
-
-            const middle = Math.min(
-                max,
-                Math.max(min,1)
-            );
-
-            zoomValues = [min,middle,max]
-                .filter((v,i,a) =>
-                    a.findIndex(x=>Math.abs(x-v)<0.001)===i
-                );
-
-            zoomIndex = 0;
-
-            if(videoTrack.applyConstraints) {
-                await videoTrack.applyConstraints({
-                    advanced:[{zoom:zoomValues[0]}]
-                });
-            }
-
-            $("zoom").style.display =
-                zoomValues.length > 1 ? "block" : "none";
-
-            $("zoom").textContent =
-                zoomValues[0].toFixed(1)+"×";
-        }
-    } catch(error) {
-        console.warn("Camera zoom unavailable:", error);
-    }
-
-    return true;
+function formatDistance(m){
+ if(!Number.isFinite(m))return "--";
+ return m>=1000?
+  (m/1000).toFixed(1)+" km":
+  Math.round(m)+" m";
 }
 
-async function changeZoom() {
-    if(!videoTrack || !zoomValues.length) return;
+function toRad(d){return d*Math.PI/180}
+function toDeg(r){return r*180/Math.PI}
+function normalize(d){return(d%360+360)%360}
 
-    zoomIndex = (zoomIndex+1)%zoomValues.length;
+function distanceMeters(a,b,c,d){
+ const R=6371000;
+ const x=toRad(c-a);
+ const y=toRad(d-b);
+ const h=Math.sin(x/2)**2+
+  Math.cos(toRad(a))*Math.cos(toRad(c))*
+  Math.sin(y/2)**2;
+ return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+}
 
-    const value=zoomValues[zoomIndex];
+function bearingTo(a,b,c,d){
+ const y=Math.sin(toRad(d-b))*Math.cos(toRad(c));
+ const x=Math.cos(toRad(a))*Math.sin(toRad(c))-
+  Math.sin(toRad(a))*Math.cos(toRad(c))*
+  Math.cos(toRad(d-b));
+ return normalize(toDeg(Math.atan2(y,x)));
+}
 
-    try {
-        await videoTrack.applyConstraints({
-            advanced:[{zoom:value}]
-        });
-        $("zoom").textContent=value.toFixed(1)+"×";
-    } catch(error) {
-        statusMessage("Zoom not supported by this camera.",3000);
-    }
+function speak(message){
+ if(!("speechSynthesis" in window))return;
+ try{
+  speechSynthesis.cancel();
+  const speech=new SpeechSynthesisUtterance(message);
+  speech.lang="en-IN";
+  speech.rate=1;
+  speechSynthesis.speak(speech);
+ }catch(error){
+  console.warn("Voice error",error);
+ }
+}
+
+/* CAMERA */
+async function openCamera(){
+ if(!navigator.mediaDevices?.getUserMedia)
+  throw new Error("Camera unavailable. HTTPS is required.");
+
+ let lastError;
+ const options=[
+  {audio:false,video:{
+   facingMode:{ideal:"environment"},
+   width:{ideal:CONFIG.cameraWidth},
+   height:{ideal:CONFIG.cameraHeight}
+  }},
+  {audio:false,video:{facingMode:{ideal:"environment"}}}
+ ];
+
+ for(const option of options){
+  try{
+   state.stream=await navigator.mediaDevices.getUserMedia(option);
+   break;
+  }catch(error){lastError=error}
+ }
+
+ if(!state.stream)
+  throw lastError||new Error("Could not open camera.");
+
+ const video=$("camera");
+ video.srcObject=state.stream;
+ await video.play();
+
+ state.track=state.stream.getVideoTracks()[0];
+ state.cameraReady=true;
+
+ $("m-camera").textContent=
+  video.videoWidth+"x"+video.videoHeight;
+
+ await setupZoom();
+ startCameraFPS();
+}
+
+/* OPTIONAL CAMERA ZOOM */
+async function setupZoom(){
+ const track=state.track;
+ if(!track?.getCapabilities)return;
+
+ try{
+  const cap=track.getCapabilities();
+  if(!cap.zoom)return;
+
+  const min=cap.zoom.min;
+  const max=cap.zoom.max;
+
+  state.zoomValues=[min,Math.max(min,Math.min(1,max)),max]
+   .filter((v,i,a)=>
+    a.findIndex(x=>Math.abs(x-v)<.001)===i);
+
+  state.zoomIndex=0;
+
+  await track.applyConstraints({
+   advanced:[{zoom:state.zoomValues[0]}]
+  });
+
+  if(state.zoomValues.length>1){
+   $("zoom").style.display="block";
+   $("zoom").textContent=
+    state.zoomValues[0].toFixed(1)+"×";
+  }
+ }catch(error){
+  console.warn("Zoom unavailable:",error);
+ }
+}
+
+async function changeZoom(){
+ if(!state.track||!state.zoomValues.length)return;
+
+ const next=(state.zoomIndex+1)%state.zoomValues.length;
+ const value=state.zoomValues[next];
+
+ try{
+  await state.track.applyConstraints({
+   advanced:[{zoom:value}]
+  });
+  state.zoomIndex=next;
+  $("zoom").textContent=value.toFixed(1)+"×";
+ }catch(error){
+  statusMessage("Hardware zoom unavailable.",3000);
+ }
+}
+
+function startCameraFPS(){
+ const video=$("camera");
+ let previous=0;
+ let count=0;
+ let start=performance.now();
+
+ if(typeof video.requestVideoFrameCallback==="function"){
+  function frame(now){
+   if(!state.started&&!state.cameraReady)return;
+   count++;
+   if(now-start>=1000){
+    state.fps=count*1000/(now-start);
+    count=0;start=now;
+    updateMetrics();
+   }
+   video.requestVideoFrameCallback(frame);
+  }
+  video.requestVideoFrameCallback(frame);
+ }else{
+  const timer=setInterval(()=>{
+   if(!state.cameraReady){
+    clearInterval(timer);return;
+   }
+   state.fps=0;
+   $("m-fps").textContent="Unsupported";
+  },1000);
+ }
+}
+
+/* COMPASS
+   Permission is requested directly from the
+   button click before other awaited operations.
+*/
+async function setupOrientation(){
+ if(state.orientationStarted)return;
+
+ if(!window.DeviceOrientationEvent){
+  $("m-heading").textContent="Not supported";
+  return;
+ }
+
+ if(typeof DeviceOrientationEvent.requestPermission==="function"){
+  try{
+   let permission;
+   try{
+    permission=await DeviceOrientationEvent.requestPermission(true);
+   }catch(error){
+    permission=await DeviceOrientationEvent.requestPermission();
+   }
+   if(permission!=="granted"){
+    $("m-heading").textContent="Permission denied";
+    return;
+   }
+  }catch(error){
+   console.warn("Compass permission:",error);
+   $("m-heading").textContent="Permission denied";
+   return;
+  }
+ }
+
+ state.orientationStarted=true;
+
+ window.addEventListener(
+  "deviceorientationabsolute",handleOrientation,true
+ );
+ window.addEventListener(
+  "deviceorientation",handleOrientation,true
+ );
+}
+
+function handleOrientation(event){
+ let value=null;
+ let source=null;
+
+ if(Number.isFinite(event.webkitCompassHeading)){
+  value=event.webkitCompassHeading;
+  source="iOS compass";
+ }else if(event.absolute&&Number.isFinite(event.alpha)){
+  value=360-event.alpha;
+  source="Absolute orientation";
+ }
+
+ if(value===null)return;
+
+ const next=normalize(value);
+
+ if(state.heading!==null){
+  let difference=normalize(next-state.heading+180)-180;
+  if(Math.abs(difference)>100)return;
+  state.heading=normalize(state.heading+difference*.25);
+ }else{
+  state.heading=next;
+ }
+
+ state.headingSource=source;
+ state.headingQuality=true;
+
+ $("heading").textContent=Math.round(state.heading)+"°";
+ $("needle").style.transform=
+  `rotate(${-state.heading}deg)`;
+
+ $("m-heading").textContent=source;
+ updateArrow();
 }
 
 /* START NAVIGATION */
-async function startNavigation() {
-    if(started) return;
+async function startNavigation(){
+ if(state.started)return;
+ const button=$("start");
+ button.disabled=true;
 
-    $("start").disabled=true;
-    $("start").style.display="none";
+ if(!window.isSecureContext){
+  statusMessage("Open this page over HTTPS.");
+  button.disabled=false;
+  return;
+ }
 
-    if(!window.isSecureContext) {
-        statusMessage("Open this website using HTTPS.");
-        $("start").style.display="block";
-        $("start").disabled=false;
-        return;
+ /*
+  Start orientation permission immediately,
+  while the button gesture is active.
+ */
+ const orientationPromise=setupOrientation();
+
+ try{
+  statusMessage("Opening rear camera...");
+  await openCamera();
+  state.started=true;
+  button.style.display="none";
+
+  $("metrics-button").style.display="block";
+  $("reroute-button").style.display="block";
+
+  await orientationPromise;
+
+  statusMessage("Camera active. Obtaining GPS...",3500);
+
+  if(!navigator.geolocation){
+   statusMessage("GPS unavailable. Camera is active.");
+   return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+   async position=>{
+    if(!acceptPosition(position))return;
+    try{
+     await loadGoogleMaps();
+     initializeMap();
+     calculateRoute(false);
+     startGPSWatch();
+    }catch(error){
+     statusMessage(
+      "Maps unavailable: "+error.message
+     );
+     startGPSWatch();
     }
+   },
+   error=>{
+    statusMessage("GPS error: "+error.message);
+   },
+   {enableHighAccuracy:true,timeout:20000,maximumAge:0}
+  );
 
-    try {
-        statusMessage("Opening rear camera...");
-
-        await openCamera();
-
-        /* CAMERA NOW VISIBLE BEFORE GPS */
-        started=true;
-
-        statusMessage(
-            "Camera active. Requesting GPS and compass...",
-            3500
-        );
-
-        await setupOrientation();
-
-        if(!navigator.geolocation) {
-            statusMessage("GPS unavailable. Camera remains active.");
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            position=>{
-                updatePosition(position);
-                initializeRoute();
-            },
-            error=>{
-                statusMessage(
-                    "Camera is working, but GPS failed: "+
-                    error.message
-                );
-            },
-            {
-                enableHighAccuracy:true,
-                timeout:20000,
-                maximumAge:0
-            }
-        );
-
-    } catch(error) {
-        console.error(error);
-
-        statusMessage(
-            "Camera failed: "+error.name+" — "+error.message
-        );
-
-        $("start").disabled=false;
-        $("start").style.display="block";
-        stopCamera();
-        started=false;
-    }
+ }catch(error){
+  console.error(error);
+  statusMessage("Camera failed: "+error.message);
+  button.disabled=false;
+  button.style.display="block";
+  stopCamera();
+  state.started=false;
+ }
 }
 
-/* DEVICE ORIENTATION */
-async function setupOrientation() {
-    if(orientationStarted) return;
+/* GOOGLE MAPS LOADER */
+function loadGoogleMaps(){
+ if(window.google?.maps)return Promise.resolve();
+ if(mapsPromise)return mapsPromise;
 
-    if(typeof DeviceOrientationEvent==="undefined") {
-        statusMessage("Compass unavailable; camera still works.",4000);
-        return;
-    }
+ if(GOOGLE_MAPS_API_KEY==="YOUR_GOOGLE_MAPS_API_KEY"){
+  return Promise.reject(new Error(
+   "Set GOOGLE_MAPS_API_KEY in Navigation.html."
+  ));
+ }
 
-    if(typeof DeviceOrientationEvent.requestPermission==="function") {
-        try {
-            const result=await DeviceOrientationEvent.requestPermission();
-            if(result!=="granted") return;
-        } catch(error) {
-            console.warn("Orientation permission:",error);
-            return;
-        }
-    }
+ mapsPromise=new Promise((resolve,reject)=>{
+  const script=document.createElement("script");
+  const timeout=setTimeout(()=>{
+   reject(new Error("Google Maps loading timed out."));
+  },15000);
 
-    orientationStarted=true;
+  script.src="https://maps.googleapis.com/maps/api/js?key="+
+   encodeURIComponent(GOOGLE_MAPS_API_KEY);
 
-    window.addEventListener(
-        "deviceorientationabsolute",
-        updateOrientation,
-        true
-    );
+  script.async=true;
+  script.onload=()=>{
+   clearTimeout(timeout);
+   if(window.google?.maps)resolve();
+   else reject(new Error("Maps API did not initialize."));
+  };
+  script.onerror=()=>{
+   clearTimeout(timeout);
+   reject(new Error("Unable to load Google Maps."));
+  };
+  document.head.appendChild(script);
+ }).catch(error=>{
+  mapsPromise=null;
+  throw error;
+ });
 
-    window.addEventListener(
-        "deviceorientation",
-        updateOrientation,
-        true
-    );
+ return mapsPromise;
 }
 
-function updateOrientation(event) {
-    let newHeading=null;
+function initializeMap(){
+ if(state.map||!window.google?.maps)return;
 
-    if(typeof event.webkitCompassHeading==="number") {
-        newHeading=event.webkitCompassHeading;
+ const position={
+  lat:state.latitude,lng:state.longitude
+ };
 
-    } else if(
-        event.absolute &&
-        typeof event.alpha==="number"
-    ) {
-        newHeading=(360-event.alpha)%360;
-    }
+ state.map=new google.maps.Map($("map"),{
+  center:position,zoom:17,disableDefaultUI:true
+ });
 
-    if(newHeading===null || !Number.isFinite(newHeading)) return;
+ state.locationMarker=new google.maps.Marker({
+  map:state.map,position,title:"Your location"
+ });
 
-    heading=(newHeading+360)%360;
+ state.routeService=new google.maps.DirectionsService();
 
-    $("heading").textContent=Math.round(heading)+"°";
+ state.routeRenderer=new google.maps.DirectionsRenderer({
+  suppressMarkers:false,
+  polylineOptions:{
+   strokeColor:"#00ffe7",
+   strokeWeight:5
+  }
+ });
 
-    $("needle").style.transform=
-        "rotate("+(-heading)+"deg)";
-
-    updateArrow();
+ state.routeRenderer.setMap(state.map);
+ $("map-box").style.display="block";
 }
 
-/* GPS UPDATE */
-function updatePosition(position) {
-    latitude=position.coords.latitude;
-    longitude=position.coords.longitude;
+/* ROUTING */
+function calculateRoute(isReroute){
+ if(!state.routeService||
+    state.latitude===null||
+    state.routeBusy)return;
 
-    currentAccuracy=position.coords.accuracy;
+ state.routeBusy=true;
+ const requestId=++state.routingRequestId;
 
-    $("gps").textContent=
-        latitude.toFixed(4)+", "+longitude.toFixed(4);
+ $("m-route").textContent="Calculating";
 
-    $("accuracy").textContent=
-        Math.round(currentAccuracy)+"m";
+ statusMessage(isReroute?
+  "Recalculating walking route...":
+  "Calculating walking route...");
 
-    if(marker) {
-        marker.setPosition({
-            lat:latitude,
-            lng:longitude
-        });
-    }
+ const origin={
+  lat:state.latitude,lng:state.longitude
+ };
 
-    updateArrow();
+ state.routeService.route({
+  origin,
+  destination:CONFIG.destination,
+  travelMode:google.maps.TravelMode.WALKING
+ },(result,status)=>{
 
-    if(
-        currentAccuracy<=MAX_GPS_ACCURACY &&
-        routeSteps.length>0
-    ) {
-        checkProgress();
-    }
+  if(requestId!==state.routingRequestId)return;
+  state.routeBusy=false;
+
+  if(status!=="OK"||!result?.routes?.[0]?.legs?.[0]){
+   $("m-route").textContent="Error: "+status;
+   statusMessage("Route error: "+status);
+   return;
+  }
+
+  const route=result.routes[0];
+  const leg=route.legs[0];
+
+  state.routeRenderer.setDirections(result);
+
+  state.routeSteps=leg.steps.map(step=>({
+   text:stripHTML(step.instructions),
+   start:{
+    lat:step.start_location.lat(),
+    lng:step.start_location.lng()
+   },
+   end:{
+    lat:step.end_location.lat(),
+    lng:step.end_location.lng()
+   },
+   distance:step.distance.value
+  }));
+
+  state.routePath=(route.overview_path||[]).map(p=>({
+   lat:p.lat(),lng:p.lng()
+  }));
+
+  state.currentStep=0;
+  state.routeReady=state.routeSteps.length>0;
+  state.arrived=false;
+  state.offRouteCount=0;
+  state.lastSpokenStep=-1;
+  state.routeLength=leg.distance.value;
+
+  if(isReroute)state.reroutes++;
+
+  $("arrow-area").style.display="block";
+  $("instruction").style.display="block";
+  $("bottom-stats").style.display="block";
+  $("steps-button").style.display="block";
+
+  buildSteps();
+  updateInstruction();
+  updateArrow();
+
+  $("m-route").textContent="Active";
+  statusMessage(
+   isReroute?"Route updated.":"Navigation started.",
+   3000
+  );
+
+  speak(state.routeSteps[0]?.text||"Navigation started.");
+  updateMetrics();
+ });
 }
 
-/* GOOGLE MAP AND WALKING ROUTE */
-function initializeRoute() {
-    if(!window.google?.maps) {
-        statusMessage(
-            "Camera active. Google Maps unavailable: check API key."
-        );
-        return;
-    }
-
-    const origin={
-        lat:latitude,
-        lng:longitude
-    };
-
-    map=new google.maps.Map($("map"),{
-        center:origin,
-        zoom:17,
-        disableDefaultUI:true
-    });
-
-    marker=new google.maps.Marker({
-        position:origin,
-        map:map,
-        title:"Your location"
-    });
-
-    directionsService=new google.maps.DirectionsService();
-
-    directionsRenderer=new google.maps.DirectionsRenderer({
-        polylineOptions:{
-            strokeColor:"#00ffe7",
-            strokeWeight:5
-        }
-    });
-
-    directionsRenderer.setMap(map);
-
-    directionsService.route({
-        origin:origin,
-        destination:DESTINATION,
-        travelMode:google.maps.TravelMode.WALKING
-    },(result,status)=>{
-
-        if(status!=="OK") {
-            statusMessage(
-                "Camera active. Route error: "+status
-            );
-            return;
-        }
-
-        directionsRenderer.setDirections(result);
-
-        const leg=result.routes[0].legs[0];
-
-        routeSteps=leg.steps.map(step=>({
-            text:stripHTML(step.instructions),
-            lat:step.end_location.lat(),
-            lng:step.end_location.lng(),
-            distance:step.distance.value
-        }));
-
-        currentStep=0;
-        arrived=false;
-
-        $("remaining").textContent=leg.distance.text;
-        $("eta").textContent=leg.duration.text;
-
-        $("arrow-area").style.display="block";
-        $("instruction").style.display="block";
-        $("bottom-stats").style.display="block";
-        $("steps-button").style.display="block";
-
-        buildSteps();
-        updateInstruction();
-        updateArrow();
-
-        statusMessage("AR navigation started.",2500);
-
-        speak("Navigation started.");
-
-        startGPSWatch();
-    });
+function stripHTML(html){
+ const element=document.createElement("div");
+ element.innerHTML=html;
+ return element.textContent||"Proceed along the route.";
 }
 
-function stripHTML(html) {
-    const div=document.createElement("div");
-    div.innerHTML=html;
-    return div.textContent||"";
+async function reroute(manual=false){
+ if(!state.started||state.latitude===null){
+  statusMessage("GPS position is unavailable.",3000);
+  return;
+ }
+
+ if(state.routeBusy)return;
+
+ const now=Date.now();
+
+ if(!manual&&
+  now-state.lastRerouteTime<CONFIG.rerouteCooldownMs)return;
+
+ if(manual&&
+  now-state.lastRerouteTime<CONFIG.minRerouteIntervalMs){
+  statusMessage("Please allow time before rerouting again.",3000);
+  return;
+ }
+
+ try{
+  await loadGoogleMaps();
+  initializeMap();
+ }catch(error){
+  statusMessage("Maps unavailable: "+error.message);
+  return;
+ }
+
+ state.lastRerouteTime=Date.now();
+ calculateRoute(true);
+}
+
+/* GPS */
+function acceptPosition(position){
+ const c=position.coords;
+ if(!Number.isFinite(c.latitude)||
+    !Number.isFinite(c.longitude))return false;
+
+ state.fixes++;
+ const accuracy=c.accuracy;
+
+ $("gps").textContent=
+  c.latitude.toFixed(4)+", "+c.longitude.toFixed(4);
+ $("accuracy").textContent=Math.round(accuracy)+"m";
+ state.accuracy=accuracy;
+
+ if(!Number.isFinite(accuracy)||
+    accuracy>CONFIG.maxGPSAccuracy){
+  state.rejected++;
+  updateMetrics();
+  return false;
+ }
+
+ const timestamp=position.timestamp||Date.now();
+
+ if(state.lastPosition){
+  const d=distanceMeters(
+   state.lastPosition.lat,state.lastPosition.lng,
+   c.latitude,c.longitude
+  );
+  const seconds=Math.max(
+   .1,(timestamp-state.lastPosition.time)/1000
+  );
+
+  const uncertainty=
+   Math.max(accuracy,state.lastPosition.accuracy);
+
+  if(seconds<20 &&
+     d>uncertainty*2+CONFIG.maxPlausibleSpeed*seconds){
+   state.rejected++;
+   updateMetrics();
+   return false;
+  }
+ }
+
+ state.latitude=c.latitude;
+ state.longitude=c.longitude;
+
+ state.lastPosition={
+  lat:c.latitude,lng:c.longitude,
+  accuracy,time:timestamp
+ };
+
+ if(state.locationMarker){
+  state.locationMarker.setPosition({
+   lat:state.latitude,lng:state.longitude
+  });
+ }
+
+ if(state.map){
+  state.map.panTo({
+   lat:state.latitude,lng:state.longitude
+  });
+ }
+
+ if(state.routeReady&&!state.arrived){
+  updateArrow();
+
+  if(accuracy<=CONFIG.progressAccuracy){
+   checkProgress();
+   checkOffRoute();
+  }
+ }
+
+ updateMetrics();
+ return true;
+}
+
+function startGPSWatch(){
+ if(state.watchId!==null)return;
+
+ state.watchId=navigator.geolocation.watchPosition(
+  acceptPosition,
+  error=>statusMessage("GPS: "+error.message,4000),
+  {enableHighAccuracy:true,maximumAge:1000,timeout:15000}
+ );
+}
+
+/* ROUTE DISTANCE */
+function updateArrow(){
+ if(!state.routeReady||state.arrived||
+  state.latitude===null)return;
+
+ const step=state.routeSteps[state.currentStep];
+ if(!step)return;
+
+ const d=distanceMeters(
+  state.latitude,state.longitude,
+  step.end.lat,step.end.lng
+ );
+
+ $("arrow-distance").textContent=formatDistance(d);
+ $("instruction-distance").textContent=
+  formatDistance(d)+" to next waypoint";
+
+ if(state.heading!==null){
+  const target=bearingTo(
+   state.latitude,state.longitude,
+   step.end.lat,step.end.lng
+  );
+
+  let relative=normalize(target-state.heading+180)-180;
+
+  /*
+   This rotates an on-screen arrow.
+   It is not a spatially anchored AR object.
+  */
+  $("main-arrow").style.transform=
+   `rotate(${relative}deg)`;
+ }else{
+  $("main-arrow").style.transform="rotate(0deg)";
+  $("instruction-distance").textContent+=
+   " · Compass unavailable";
+ }
+
+ let remaining=d;
+
+ for(let i=state.currentStep+1;
+     i<state.routeSteps.length;i++){
+  remaining+=state.routeSteps[i].distance;
+ }
+
+ $("remaining").textContent=formatDistance(remaining);
+ $("eta").textContent=
+  Math.ceil(remaining/CONFIG.walkingSpeed/60)+" min";
+}
+
+/* STEP PROGRESSION */
+function checkProgress(){
+ if(!state.routeReady||state.arrived)return;
+
+ const step=state.routeSteps[state.currentStep];
+ if(!step)return;
+
+ const d=distanceMeters(
+  state.latitude,state.longitude,
+  step.end.lat,step.end.lng
+ );
+
+ const isFinal=
+  state.currentStep===state.routeSteps.length-1;
+
+ const radius=isFinal?
+  CONFIG.arrivalRadius:CONFIG.waypointRadius;
+
+ if(d>radius)return;
+
+ if(isFinal){
+  state.arrived=true;
+  $("instruction-text").textContent="Destination reached!";
+  $("instruction-distance").textContent="";
+  $("arrow-area").style.display="none";
+  $("remaining").textContent="0 m";
+  $("eta").textContent="0 min";
+  $("m-route").textContent="Arrived";
+  speak("You have arrived at your destination.");
+  return;
+ }
+
+ state.currentStep++;
+ updateInstruction();
+ updateArrow();
+
+ if(state.lastSpokenStep!==state.currentStep){
+  state.lastSpokenStep=state.currentStep;
+  speak(state.routeSteps[state.currentStep].text);
+ }
+}
+
+/* ROUTE DEVIATION
+   Approximate point-to-polyline distance.
+   Consecutive accurate fixes are required.
+*/
+function segmentDistanceMeters(p,a,b){
+ const lat0=toRad(p.lat);
+ const sx=111320*Math.cos(lat0);
+ const sy=111320;
+
+ const ax=(a.lng-p.lng)*sx;
+ const ay=(a.lat-p.lat)*sy;
+ const bx=(b.lng-p.lng)*sx;
+ const by=(b.lat-p.lat)*sy;
+
+ const dx=bx-ax,dy=by-ay;
+ const len=dx*dx+dy*dy;
+
+ const t=len===0?0:
+  Math.max(0,Math.min(1,
+   -(ax*dx+ay*dy)/len));
+
+ return Math.hypot(ax+t*dx,ay+t*dy);
+}
+
+function distanceFromRoute(){
+ if(state.latitude===null||state.routePath.length<2)
+  return null;
+
+ const p={lat:state.latitude,lng:state.longitude};
+ let best=Infinity;
+
+ for(let i=0;i<state.routePath.length-1;i++){
+  best=Math.min(best,segmentDistanceMeters(
+   p,state.routePath[i],state.routePath[i+1]
+  ));
+ }
+ return best;
+}
+
+function checkOffRoute(){
+ if(state.routeBusy||state.arrived)return;
+
+ const distance=distanceFromRoute();
+ if(distance===null)return;
+
+ state.offRouteDistance=distance;
+
+ if(distance>CONFIG.offRouteDistance){
+  state.offRouteCount++;
+ }else{
+  state.offRouteCount=0;
+ }
+
+ if(state.offRouteCount>=CONFIG.offRouteSamples){
+  state.offRouteCount=0;
+  statusMessage("Possible route deviation. Rerouting...",3500);
+  reroute(false);
+ }
 }
 
 /* ROUTE STEP LIST */
-function buildSteps() {
-    const container=$("steps");
-    container.innerHTML="";
+function buildSteps(){
+ const container=$("steps");
+ container.replaceChildren();
 
-    routeSteps.forEach((step,index)=>{
-        const div=document.createElement("div");
-        div.className="step"+(index===0?" active":"");
-        div.id="step-"+index;
-        div.textContent=(index+1)+". "+step.text;
-        container.appendChild(div);
-    });
+ state.routeSteps.forEach((step,index)=>{
+  const div=document.createElement("div");
+  div.className="step"+(index===0?" active":"");
+  div.textContent=(index+1)+". "+step.text;
+  container.appendChild(div);
+ });
 }
 
-function toggleSteps() {
-    const el=$("steps");
-    el.style.display=
-        el.style.display==="block"?"none":"block";
+function updateInstruction(){
+ const step=state.routeSteps[state.currentStep];
+ if(!step)return;
+
+ $("instruction-text").textContent=step.text;
+
+ document.querySelectorAll("#steps .step")
+  .forEach((element,index)=>{
+   element.classList.toggle(
+    "active",index===state.currentStep
+   );
+  });
 }
 
-/* GPS WATCH */
-function startGPSWatch() {
-    if(watchId!==null) {
-        navigator.geolocation.clearWatch(watchId);
-    }
-
-    watchId=navigator.geolocation.watchPosition(
-        position=>{
-            updatePosition(position);
-
-            if(map) {
-                map.panTo({
-                    lat:latitude,
-                    lng:longitude
-                });
-            }
-        },
-        error=>{
-            console.warn("GPS:",error.message);
-            statusMessage(
-                "GPS signal problem: "+error.message,
-                4000
-            );
-        },
-        {
-            enableHighAccuracy:true,
-            maximumAge:1000,
-            timeout:15000
-        }
-    );
+function toggleSteps(){
+ const box=$("steps");
+ box.style.display=
+  box.style.display==="block"?"none":"block";
 }
 
-/* DISTANCE */
-function toRad(deg) {
-    return deg*Math.PI/180;
+/* DIAGNOSTICS */
+function toggleMetrics(){
+ $("metrics").classList.toggle("visible");
+ updateMetrics();
 }
 
-function distanceMeters(lat1,lon1,lat2,lon2) {
-    const R=6371000;
-    const dLat=toRad(lat2-lat1);
-    const dLon=toRad(lon2-lon1);
+function updateMetrics(){
+ $("m-gps").textContent=
+  Number.isFinite(state.accuracy)?
+   Math.round(state.accuracy)+" m":"--";
 
-    const a=
-        Math.sin(dLat/2)**2+
-        Math.cos(toRad(lat1))*
-        Math.cos(toRad(lat2))*
-        Math.sin(dLon/2)**2;
+ $("m-fixes").textContent=state.fixes;
+ $("m-rejected").textContent=state.rejected;
+ $("m-reroutes").textContent=state.reroutes;
 
-    return 2*R*Math.atan2(
-        Math.sqrt(a),
-        Math.sqrt(1-a)
-    );
+ $("m-offroute").textContent=
+  state.offRouteDistance===null?"--":
+  formatDistance(state.offRouteDistance);
+
+ $("m-fps").textContent=
+  state.fps?state.fps.toFixed(1):"--";
 }
 
-function bearingTo(lat1,lon1,lat2,lon2) {
-    const dLon=toRad(lon2-lon1);
-
-    const y=Math.sin(dLon)*Math.cos(toRad(lat2));
-
-    const x=
-        Math.cos(toRad(lat1))*Math.sin(toRad(lat2))-
-        Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*
-        Math.cos(dLon);
-
-    return (
-        Math.atan2(y,x)*180/Math.PI+360
-    )%360;
+/* CLEANUP */
+function stopCamera(){
+ if(state.stream){
+  state.stream.getTracks().forEach(t=>t.stop());
+  state.stream=null;
+ }
+ state.cameraReady=false;
+ state.track=null;
+ $("camera").srcObject=null;
 }
 
-function formatDistance(m) {
-    return m>=1000
-        ?(m/1000).toFixed(1)+" km"
-        :Math.round(m)+" m";
+function cleanup(){
+ if(state.watchId!==null){
+  navigator.geolocation.clearWatch(state.watchId);
+  state.watchId=null;
+ }
+
+ window.removeEventListener(
+  "deviceorientationabsolute",handleOrientation,true
+ );
+ window.removeEventListener(
+  "deviceorientation",handleOrientation,true
+ );
+
+ stopCamera();
+
+ if("speechSynthesis" in window)
+  speechSynthesis.cancel();
 }
 
-/* AR DIRECTION OVER CAMERA */
-function updateArrow() {
-    if(
-        !routeSteps.length ||
-        currentStep>=routeSteps.length ||
-        latitude===null
-    ) return;
-
-    const step=routeSteps[currentStep];
-
-    const distance=distanceMeters(
-        latitude,longitude,
-        step.lat,step.lng
-    );
-
-    $("arrow-distance").textContent=
-        formatDistance(distance);
-
-    $("instruction-distance").textContent=
-        formatDistance(distance)+" to next waypoint";
-
-    if(heading!==null) {
-        const target=bearingTo(
-            latitude,longitude,
-            step.lat,step.lng
-        );
-
-        let relative=(target-heading+360)%360;
-
-        if(relative>180) relative-=360;
-
-        $("main-arrow").style.transform=
-            "rotate("+relative+"deg)";
-    } else {
-        $("main-arrow").style.transform="rotate(0deg)";
-    }
-
-    let remaining=distance;
-
-    for(let i=currentStep+1;i<routeSteps.length;i++) {
-        remaining+=routeSteps[i].distance;
-    }
-
-    $("remaining").textContent=formatDistance(remaining);
-    $("eta").textContent=
-        Math.max(1,Math.ceil(remaining/1.3/60))+" min";
-}
-
-/* WAYPOINT PROGRESS */
-function checkProgress() {
-    if(arrived || currentStep>=routeSteps.length) return;
-
-    const step=routeSteps[currentStep];
-
-    const dist=distanceMeters(
-        latitude,longitude,
-        step.lat,step.lng
-    );
-
-    if(dist>WAYPOINT_RADIUS) return;
-
-    currentStep++;
-
-    if(currentStep>=routeSteps.length) {
-        arrived=true;
-
-        $("instruction-text").textContent=
-            "Destination reached!";
-
-        $("instruction-distance").textContent="";
-        $("arrow-area").style.display="none";
-        $("remaining").textContent="0 m";
-        $("eta").textContent="0 min";
-
-        speak("You have arrived at your destination.");
-        return;
-    }
-
-    updateInstruction();
-    updateArrow();
-
-    speak(routeSteps[currentStep].text);
-}
-
-function updateInstruction() {
-    if(currentStep>=routeSteps.length) return;
-
-    $("instruction-text").textContent=
-        routeSteps[currentStep].text;
-
-    document.querySelectorAll(".step").forEach(
-        el=>el.classList.remove("active")
-    );
-
-    $("step-"+currentStep)?.classList.add("active");
-}
-
-/* VOICE */
-function speak(text) {
-    if(!("speechSynthesis" in window)) return;
-
-    try {
-        speechSynthesis.cancel();
-
-        const utterance=new SpeechSynthesisUtterance(text);
-        utterance.lang="en-IN";
-        utterance.rate=1;
-
-        speechSynthesis.speak(utterance);
-    } catch(error) {
-        console.warn("Speech unavailable:",error);
-    }
-}
-
-/* CAMERA CLEANUP */
-function stopCamera() {
-    if(stream) {
-        stream.getTracks().forEach(track=>track.stop());
-        stream=null;
-    }
-    $("camera").srcObject=null;
-}
-
-/* BACK HOME */
-function goBack() {
-    cleanup();
-    window.location.href="home.html";
-}
-
-function cleanup() {
-    if(watchId!==null) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId=null;
-    }
-
-    stopCamera();
-
-    if("speechSynthesis" in window) {
-        speechSynthesis.cancel();
-    }
+function goBack(){
+ cleanup();
+ window.location.href="home.html";
 }
 
 window.addEventListener("pagehide",cleanup);
-
 </script>
 </body>
 </html>
