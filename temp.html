@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,57 +14,88 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
     <style>
-        body {
+        /* Visual refresh only. AR camera, scene, and OCR remain unchanged. */
+        :root { color-scheme: dark; }
+        html, body {
             margin: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             font-family: Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
-
         #invite-btn {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            border: none;
-            font-size: 22px;
-            background: #ff69b4;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            left: max(18px, env(safe-area-inset-left));
+            width: 58px;
+            height: 58px;
+            display: grid;
+            place-items: center;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,.45);
+            font-size: 25px;
+            background: linear-gradient(145deg, #ff8eb9, #d83a7e);
             color: white;
             z-index: 999;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            box-shadow: 0 6px 22px rgba(81, 5, 46, .42);
             cursor: pointer;
+            transition: transform .18s ease, box-shadow .18s ease;
         }
-
+        #invite-btn:active { transform: scale(.95); }
+        #invite-btn:focus-visible { outline: 3px solid #ffe49a; outline-offset: 3px; }
         #invite-box {
             position: fixed;
-            bottom: 90px;
-            left: 20px;
-            width: 220px;
-            padding: 12px;
-            background: rgba(0,0,0,0.85);
-            color: white;
-            border-radius: 10px;
+            bottom: max(94px, calc(env(safe-area-inset-bottom) + 94px));
+            left: max(18px, env(safe-area-inset-left));
+            width: min(305px, calc(100vw - 36px));
+            padding: 20px 20px 18px;
+            background: linear-gradient(155deg, rgba(38, 18, 43, .96), rgba(17, 13, 29, .96));
+            color: #fff8f3;
+            border-radius: 18px;
             font-size: 14px;
             display: none;
             z-index: 999;
-            border: 1px solid #FFD700;
-            line-height: 1.6;
+            border: 1px solid rgba(255, 215, 112, .78);
+            line-height: 1.75;
+            box-shadow: 0 14px 38px rgba(0, 0, 0, .45);
+            backdrop-filter: blur(10px);
         }
-
+        #invite-box::before {
+            content: '💍  WEDDING INVITATION';
+            display: block;
+            margin-bottom: 10px;
+            color: #ffe2a2;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+        }
+        #invite-box p { margin: 0; }
+        #invite-box b { color: #ffdca0; }
         #ocr-status {
             position: fixed;
-            top: 15px;
+            top: max(14px, env(safe-area-inset-top));
             left: 50%;
             transform: translateX(-50%);
-            padding: 10px 14px;
-            background: rgba(0,0,0,0.75);
-            color: white;
-            border-radius: 8px;
-            font-size: 13px;
+            width: max-content;
+            max-width: calc(100vw - 28px);
+            padding: 10px 16px;
+            background: rgba(28, 17, 38, .88);
+            color: #fff3d6;
+            border: 1px solid rgba(255, 217, 142, .72);
+            border-radius: 999px;
+            font-size: 12px;
+            line-height: 1.4;
+            font-weight: 600;
             z-index: 999;
             text-align: center;
-            max-width: 85%;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, .3);
+            backdrop-filter: blur(8px);
+            pointer-events: none;
+        }
+        @media (max-width: 420px) {
+            #invite-box { font-size: 13px; }
+            #ocr-status { font-size: 11px; }
         }
     </style>
 </head>
@@ -580,4 +610,3 @@
 
 </body>
 </html>
-```
